@@ -1,36 +1,38 @@
-from cython.operator cimport dereference as deref, preincrement as inc
 from cython cimport address
-from libcpp.string cimport string
-from libcpp.vector cimport vector
-
-from ecell4.types cimport *
-from ecell4.shared_ptr cimport shared_ptr
-from ecell4.core cimport *
+from cython.operator cimport dereference as deref, preincrement as inc
 
 
-## BDWorld
-#  a python wrapper for Cpp_BDWorld
-cdef class BDWorld:
+## EGFRDWorld
+#  a python wrapper for Cpp_EGFRDWorld
+cdef class EGFRDWorld:
 
-    def __cinit__(self, edge_lengths = None, GSLRandomNumberGenerator rng = None):
+    def __cinit__(self, edge_lengths=None, Global matrix_sizes=None,
+        GSLRandomNumberGenerator rng=None):
         cdef string filename
 
-        if edge_lengths is None:
-            self.thisptr = new shared_ptr[Cpp_BDWorld](new Cpp_BDWorld())
-        elif rng is None:
-            if isinstance(edge_lengths, Position3):
-                self.thisptr = new shared_ptr[Cpp_BDWorld](
-                    new Cpp_BDWorld(deref((<Position3>edge_lengths).thisptr)))
-            else:
-                filename = edge_lengths
-                self.thisptr = new shared_ptr[Cpp_BDWorld](new Cpp_BDWorld(filename))
-        else:
-            self.thisptr = new shared_ptr[Cpp_BDWorld](
-                new Cpp_BDWorld(deref((<Position3>edge_lengths).thisptr), deref(rng.thisptr)))
+        if rng is not None:
+            self.thisptr = new shared_ptr[Cpp_EGFRDWorld](
+                new Cpp_EGFRDWorld(
+                    deref((<Position3>edge_lengths).thisptr),
+                    deref(matrix_sizes.thisptr), deref(rng.thisptr)))
+        elif matrix_sizes is not None:
+            self.thisptr = new shared_ptr[Cpp_EGFRDWorld](
+                new Cpp_EGFRDWorld(
+                    deref((<Position3>edge_lengths).thisptr),
+                    deref(matrix_sizes.thisptr)))
+        elif edge_lengths is None:
+            self.thisptr = new shared_ptr[Cpp_EGFRDWorld](new Cpp_EGFRDWorld())
+        elif isinstance(edge_lengths, Position3):
+            self.thisptr = new shared_ptr[Cpp_EGFRDWorld](
+                new Cpp_EGFRDWorld(deref((<Position3>edge_lengths).thisptr)))
+        # else:
+        #     filename = edge_lengths
+        #     self.thisptr = new shared_ptr[Cpp_EGFRDWorld](
+        #         new Cpp_EGFRDWorld(filename))
 
     def __dealloc__(self):
         # XXX: Here, we release shared pointer,
-        #      and if reference count to the BDWorld object,
+        #      and if reference count to the EGFRDWorld object,
         #      it will be released automatically.
         del self.thisptr
 
@@ -140,17 +142,17 @@ cdef class BDWorld:
             inc(it)
         return retval
 
-    def periodic_transpose(self, Position3 pos1, Position3 pos2):
-        cdef Cpp_Position3 newpos = self.thisptr.get().periodic_transpose(
-            deref(pos1.thisptr), deref(pos2.thisptr))
-        return Position3_from_Cpp_Position3(address(newpos))
+    # def periodic_transpose(self, Position3 pos1, Position3 pos2):
+    #     cdef Cpp_Position3 newpos = self.thisptr.get().periodic_transpose(
+    #         deref(pos1.thisptr), deref(pos2.thisptr))
+    #     return Position3_from_Cpp_Position3(address(newpos))
 
     def apply_boundary(self, Position3 pos):
         cdef Cpp_Position3 newpos = self.thisptr.get().apply_boundary(deref(pos.thisptr))
         return Position3_from_Cpp_Position3(address(newpos))
 
-    def distance_sq(self, Position3 pos1, Position3 pos2):
-        return self.thisptr.get().distance_sq(deref(pos1.thisptr), deref(pos2.thisptr))
+    # def distance_sq(self, Position3 pos1, Position3 pos2):
+    #     return self.thisptr.get().distance_sq(deref(pos1.thisptr), deref(pos2.thisptr))
 
     def distance(self, Position3 pos1, Position3 pos2):
         return self.thisptr.get().distance(deref(pos1.thisptr), deref(pos2.thisptr))
@@ -158,8 +160,8 @@ cdef class BDWorld:
     def volume(self):
         return self.thisptr.get().volume()
 
-    # def has_species(self, Species sp):
-    #     return self.thisptr.get().has_species(deref(sp.thisptr))
+    def has_species(self, Species sp):
+        return self.thisptr.get().has_species(deref(sp.thisptr))
 
     def num_molecules(self, Species sp):
         return self.thisptr.get().num_molecules(deref(sp.thisptr))
@@ -169,9 +171,6 @@ cdef class BDWorld:
 
     # def add_species(self, Species sp):
     #     self.thisptr.get().add_species(deref(sp.thisptr))
-
-    # def add_molecules(self, Species sp, Integer num):
-    #     self.thisptr.get().add_molecules(deref(sp.thisptr), num)
 
     def add_molecules(self, Species sp, Integer num, shape=None):
         if shape is None:
@@ -196,30 +195,26 @@ cdef class BDWorld:
         return GSLRandomNumberGenerator_from_Cpp_RandomNumberGenerator(
             self.thisptr.get().rng())
 
-    def as_base(self):
-        retval = Space()
-        del retval.thisptr
-        retval.thisptr = new shared_ptr[Cpp_Space](
-            <shared_ptr[Cpp_Space]>deref(self.thisptr))
-        return retval
 
-cdef BDWorld BDWorld_from_Cpp_BDWorld(
-    shared_ptr[Cpp_BDWorld] w):
-    r = BDWorld(Position3(1, 1, 1))
+cdef EGFRDWorld EGFRDWorld_from_Cpp_EGFRDWorld(
+    shared_ptr[Cpp_EGFRDWorld] w):
+    r = EGFRDWorld(Position3(1, 1, 1))
     r.thisptr.swap(w)
     return r
 
-## BDSimulator
-#  a python wrapper for Cpp_BDSimulator
-cdef class BDSimulator:
+## EGFRDSimulator
+#  a python wrapper for Cpp_EGFRDSimulator
+cdef class EGFRDSimulator:
 
-    def __cinit__(self, m, BDWorld w=None):
-        if w is None:
-            self.thisptr = new Cpp_BDSimulator(
-                deref((<BDWorld>w).thisptr))
-        else:
-            self.thisptr = new Cpp_BDSimulator(
-                deref(Cpp_Model_from_Model(m)), deref(w.thisptr))
+    def __cinit__(self, m, EGFRDWorld w):
+        self.thisptr = new Cpp_EGFRDSimulator(
+            deref(w.thisptr), deref(Cpp_Model_from_Model(m)))
+        # if w is None:
+        #     self.thisptr = new Cpp_EGFRDSimulator(
+        #         deref((<EGFRDWorld>w).thisptr))
+        # else:
+        #     self.thisptr = new Cpp_EGFRDSimulator(
+        #         deref(w.thisptr), deref(Cpp_Model_from_Model(m)))
 
     def __dealloc__(self):
         del self.thisptr
@@ -231,7 +226,7 @@ cdef class BDSimulator:
         if upto is None:
             self.thisptr.step()
         else:
-            return self.thisptr.step(upto)
+            return self.thisptr.step(<Real> upto)
 
     def t(self):
         return self.thisptr.t()
@@ -239,14 +234,8 @@ cdef class BDSimulator:
     def dt(self):
         return self.thisptr.dt()
 
-    def set_dt(self, Real& dt):
-        self.thisptr.set_dt(dt)
-
     def next_time(self):
         return self.thisptr.next_time()
-
-    def initialize(self):
-        self.thisptr.initialize()
 
     def last_reactions(self):
         cdef vector[Cpp_ReactionRule] reactions = self.thisptr.last_reactions()
@@ -258,11 +247,20 @@ cdef class BDSimulator:
             inc(it)
         return retval
 
+    def set_t(self, Real new_t):
+        self.thisptr.set_t(new_t)
+
+    def set_dt(self, Real dt):
+        self.thisptr.set_dt(dt)
+
+    def initialize(self):
+        self.thisptr.initialize()
+
     def model(self):
         return Model_from_Cpp_Model(self.thisptr.model())
 
     def world(self):
-        return BDWorld_from_Cpp_BDWorld(self.thisptr.world())
+        return EGFRDWorld_from_Cpp_EGFRDWorld(self.thisptr.world())
 
     def run(self, Real duration, observers=None):
         cdef vector[shared_ptr[Cpp_Observer]] tmp
@@ -274,40 +272,82 @@ cdef class BDSimulator:
                 tmp.push_back(deref((<Observer>(obs.as_base())).thisptr))
             self.thisptr.run(duration, tmp)
 
-cdef BDSimulator BDSimulator_from_Cpp_BDSimulator(Cpp_BDSimulator* s):
-    r = BDSimulator(
-        Model_from_Cpp_Model(s.model()), BDWorld_from_Cpp_BDWorld(s.world()))
+cdef EGFRDSimulator EGFRDSimulator_from_Cpp_EGFRDSimulator(Cpp_EGFRDSimulator* s):
+    r = EGFRDSimulator(
+        Model_from_Cpp_Model(s.model()), EGFRDWorld_from_Cpp_EGFRDWorld(s.world()))
     del r.thisptr
     r.thisptr = s
     return r
 
-## BDFactory
-#  a python wrapper for Cpp_BDFactory
-cdef class BDFactory:
+## EGFRDFactory
+#  a python wrapper for Cpp_EGFRDFactory
+cdef class EGFRDFactory:
 
-    def __cinit__(self, GSLRandomNumberGenerator rng=None):
-        if rng is None:
-            self.thisptr = new Cpp_BDFactory()
+    def __cinit__(self, arg1=None, arg2=None, arg3=None, arg4=None, arg5=None):
+        self.thisptr = new Cpp_EGFRDFactory()
+        if isinstance(arg1, Global):
+            if isinstance(arg2, GSLRandomNumberGenerator):
+                if arg3 is None:
+                    self.thisptr = new Cpp_EGFRDFactory(
+                        deref((<Global>arg1).thisptr),
+                        deref((<GSLRandomNumberGenerator>arg2).thisptr))
+                elif arg4 is None:
+                    self.thisptr = new Cpp_EGFRDFactory(
+                        deref((<Global>arg1).thisptr),
+                        deref((<GSLRandomNumberGenerator>arg2).thisptr), <Integer>arg3)
+                elif arg5 is None:
+                    self.thisptr = new Cpp_EGFRDFactory(
+                        deref((<Global>arg1).thisptr),
+                        deref((<GSLRandomNumberGenerator>arg2).thisptr),
+                        <Integer>arg3, <Real>arg4)
+                else:
+                    self.thisptr = new Cpp_EGFRDFactory(
+                        deref((<Global>arg1).thisptr),
+                        deref((<GSLRandomNumberGenerator>arg2).thisptr),
+                        <Integer>arg3, <Real>arg4, <Real>arg5)
+            else:
+                if arg5 is not None:
+                    raise RuntimeError, "too many arguments were given."
+                elif arg2 is None:
+                    self.thisptr = new Cpp_EGFRDFactory(deref((<Global>arg1).thisptr))
+                elif arg3 is None:
+                    self.thisptr = new Cpp_EGFRDFactory(
+                        deref((<Global>arg1).thisptr), <Integer>arg2)
+                elif arg4 is None:
+                    self.thisptr = new Cpp_EGFRDFactory(
+                        deref((<Global>arg1).thisptr), <Integer>arg2, <Real>arg3)
+                else:
+                    self.thisptr = new Cpp_EGFRDFactory(
+                        deref((<Global>arg1).thisptr), <Integer>arg2, <Real>arg3, <Real>arg4)
         else:
-            self.thisptr = new Cpp_BDFactory(deref(rng.thisptr))
+            if arg4 is not None or arg5 is not None:
+                raise RuntimeError, "too many arguments were given."
+            elif arg1 is None:
+                self.thisptr = new Cpp_EGFRDFactory()
+            elif arg2 is None:
+                self.thisptr = new Cpp_EGFRDFactory(<Integer>arg1)
+            elif arg3 is None:
+                self.thisptr = new Cpp_EGFRDFactory(<Integer>arg1, <Real>arg2)
+            else:
+                self.thisptr = new Cpp_EGFRDFactory(<Integer>arg1, <Real>arg2, <Real>arg3)
 
     def __dealloc__(self):
         del self.thisptr
 
     def create_world(self, arg1):
         if isinstance(arg1, Position3):
-            return BDWorld_from_Cpp_BDWorld(
-                shared_ptr[Cpp_BDWorld](
+            return EGFRDWorld_from_Cpp_EGFRDWorld(
+                shared_ptr[Cpp_EGFRDWorld](
                     self.thisptr.create_world(deref((<Position3>arg1).thisptr))))
         else:
-            return BDWorld_from_Cpp_BDWorld(
-                shared_ptr[Cpp_BDWorld](self.thisptr.create_world(<string>(arg1))))
+            return EGFRDWorld_from_Cpp_EGFRDWorld(
+                shared_ptr[Cpp_EGFRDWorld](self.thisptr.create_world(<string>(arg1))))
 
-    def create_simulator(self, arg1, BDWorld arg2=None):
+    def create_simulator(self, arg1, EGFRDWorld arg2=None):
         if arg2 is None:
-            return BDSimulator_from_Cpp_BDSimulator(
-                self.thisptr.create_simulator(deref((<BDWorld>arg1).thisptr)))
+            return EGFRDSimulator_from_Cpp_EGFRDSimulator(
+                self.thisptr.create_simulator(deref((<EGFRDWorld>arg1).thisptr)))
         else:
-            return BDSimulator_from_Cpp_BDSimulator(
+            return EGFRDSimulator_from_Cpp_EGFRDSimulator(
                 self.thisptr.create_simulator(
                     deref(Cpp_Model_from_Model(arg1)), deref(arg2.thisptr)))
