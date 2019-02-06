@@ -15,8 +15,8 @@ import multiprocessing
 import copy
 import csv
 
-import ecell4.extra.sge as sge
-import ecell4.extra.slurm as slurm
+from . import sge
+from . import slurm
 
 
 def run_serial(target, jobs, n=1, **kwargs):
@@ -573,9 +573,9 @@ def singlerun(job, job_id, task_id):
     data = ecell4.util.run_simulation(**job)
     return data
 
-import ecell4.util.decorator
-import ecell4.util.simulation
-import ecell4.util.viz
+import ecell4_extras.util.decorator
+import ecell4_extras.util.simulation
+import ecell4_extras.util.viz
 import ecell4.ode
 
 def list_species(model, seeds=None):
