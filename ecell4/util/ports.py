@@ -78,7 +78,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
                 elif unit.check_dimensionality(value, '[substance]'):
                     y0[key] = value.to_base_units().magnitude
                 elif unit.check_dimensionality(value, '[concentration]'):
-                    volume = w.volume() if not isinstance(w, ecell4.spatiocyte.SpatiocyteWorld) else w.actual_volume()
+                    volume = w.volume() if not isinstance(w, ecell4_base.spatiocyte.SpatiocyteWorld) else w.actual_volume()
                     y0[key] = value.to_base_units().magnitude * volume
                 else:
                     raise ValueError(

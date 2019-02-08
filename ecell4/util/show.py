@@ -28,7 +28,7 @@ def show(target, *args, **kwargs):
         plot_number_observer(target, *args, **kwargs)
     elif isinstance(target, (ecell4_base.core.FixedIntervalTrajectoryObserver, ecell4_base.core.FixedIntervalTrackingObserver)):
         plot_trajectory(target, *args, **kwargs)
-    elif isinstance(target, (ecell4.ode.ODEWorld, ecell4.gillespie.GillespieWorld, ecell4.spatiocyte.SpatiocyteWorld, ecell4.meso.MesoscopicWorld, ecell4.bd.BDWorld, ecell4.egfrd.EGFRDWorld)):
+    elif isinstance(target, (ecell4_base.ode.ODEWorld, ecell4_base.gillespie.GillespieWorld, ecell4_base.spatiocyte.SpatiocyteWorld, ecell4_base.meso.MesoscopicWorld, ecell4_base.bd.BDWorld, ecell4_base.egfrd.EGFRDWorld)):
         plot_world(target, *args, **kwargs)
     elif isinstance(target, (ecell4_base.core.Model, ecell4_base.core.NetworkModel, ecell4_base.core.NetfreeModel)):
         dump_model(target)

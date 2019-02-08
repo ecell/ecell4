@@ -576,7 +576,7 @@ def singlerun(job, job_id, task_id):
 import ecell4.util.decorator
 import ecell4.util.simulation
 import ecell4.util.viz
-import ecell4.ode
+# import ecell4_base.ode
 
 def list_species(model, seeds=None):
     """This function is deprecated."""

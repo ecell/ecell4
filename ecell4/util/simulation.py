@@ -28,17 +28,17 @@ def load_world(filename):
 
     vinfo = ecell4_base.core.load_version_information(filename)
     if vinfo.startswith("ecell4-bd"):
-        return ecell4.bd.World(filename)
+        return ecell4_base.bd.World(filename)
     elif vinfo.startswith("ecell4-egfrd"):
-        return ecell4.egfrd.World(filename)
+        return ecell4_base.egfrd.World(filename)
     elif vinfo.startswith("ecell4-meso"):
-        return ecell4.meso.World(filename)
+        return ecell4_base.meso.World(filename)
     elif vinfo.startswith("ecell4-ode"):
-        return ecell4.ode.World(filename)
+        return ecell4_base.ode.World(filename)
     elif vinfo.startswith("ecell4-gillespie"):
-        return ecell4.gillespie.World(filename)
+        return ecell4_base.gillespie.World(filename)
     elif vinfo.startswith("ecell4-spatiocyte"):
-        return ecell4.spatiocyte.World(filename)
+        return ecell4_base.spatiocyte.World(filename)
     elif vinfo == "":
         raise RuntimeError("No version information was found in [{0}]".format(filename))
     raise RuntimeError("Unkown version information [{0}]".format(vinfo))
@@ -47,17 +47,17 @@ def get_factory(solver, *args):
     import ecell4_base
 
     if solver == 'ode':
-        return ecell4.ode.Factory(*args)
+        return ecell4_base.ode.Factory(*args)
     elif solver == 'gillespie':
-        return ecell4.gillespie.Factory(*args)
+        return ecell4_base.gillespie.Factory(*args)
     elif solver == 'spatiocyte':
-        return ecell4.spatiocyte.Factory(*args)
+        return ecell4_base.spatiocyte.Factory(*args)
     elif solver == 'meso':
-        return ecell4.meso.Factory(*args)
+        return ecell4_base.meso.Factory(*args)
     elif solver == 'bd':
-        return ecell4.bd.Factory(*args)
+        return ecell4_base.bd.Factory(*args)
     elif solver == 'egfrd':
-        return ecell4.egfrd.Factory(*args)
+        return ecell4_base.egfrd.Factory(*args)
     else:
         raise ValueError(
             'unknown solver name was given: ' + repr(solver)
@@ -230,14 +230,14 @@ def run_simulation(
                 elif unit.check_dimensionality(value, '[substance]'):
                     y0[key] = value.to_base_units().magnitude
                 elif unit.check_dimensionality(value, '[concentration]'):
-                    volume = w.volume() if not isinstance(w, ecell4.spatiocyte.SpatiocyteWorld) else w.actual_volume()
+                    volume = w.volume() if not isinstance(w, ecell4_base.spatiocyte.SpatiocyteWorld) else w.actual_volume()
                     y0[key] = value.to_base_units().magnitude * volume
                 else:
                     raise ValueError(
                         "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
                             key, value.dimensionality, value.u))
 
-    if not isinstance(w, ecell4.ode.ODEWorld):
+    if not isinstance(w, ecell4_base.ode.ODEWorld):
         w.bind_to(model)
 
     for (name, shape) in (structures.items() if isinstance(structures, dict) else structures):
@@ -248,7 +248,7 @@ def run_simulation(
         else:
             w.add_structure(ecell4_base.core.Species(name), shape)
 
-    if isinstance(w, ecell4.ode.ODEWorld):
+    if isinstance(w, ecell4_base.ode.ODEWorld):
         # w.bind_to(model)  # stop binding for ode
         for serial, n in y0.items():
             w.set_value(ecell4_base.core.Species(serial), n)
