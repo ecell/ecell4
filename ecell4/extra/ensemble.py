@@ -573,10 +573,10 @@ def singlerun(job, job_id, task_id):
     data = ecell4.util.run_simulation(**job)
     return data
 
-import ecell4_extras.util.decorator
-import ecell4_extras.util.simulation
-import ecell4_extras.util.viz
-import ecell4.ode
+import ecell4.util.decorator
+import ecell4.util.simulation
+import ecell4.util.viz
+# import ecell4_base.ode
 
 def list_species(model, seeds=None):
     """This function is deprecated."""
@@ -715,7 +715,7 @@ def ensemble_simulations(
             else:
                 self.__error = None
 
-            self.__species_list = [ecell4.Species(serial) for serial in species_list]
+            self.__species_list = [ecell4_base.core.Species(serial) for serial in species_list]
 
         def targets(self):
             return self.__species_list
@@ -776,7 +776,7 @@ def ensemble_simulations(
 
 if __name__ == "__main__":
     # def myrun(job, job_id=0, task_id=0):
-    #     import ecell4
+    #     import ecell4_base
     #     print("Hi, I'm in local!")
     #     print("My job id is {:d}, and my task id is {:d}.".format(job_id, task_id))
     #     print("My job is {:s}.".format(str(job)))

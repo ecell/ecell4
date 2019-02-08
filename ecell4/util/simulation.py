@@ -10,7 +10,7 @@ from ..extra.ensemble import ensemble_simulations
 def load_world(filename):
     """
     Load a world from the given HDF5 filename.
-    The return type is determined by ``ecell4.core.load_version_information``.
+    The return type is determined by ``ecell4_base.core.load_version_information``.
 
     Parameters
     ----------
@@ -24,40 +24,40 @@ def load_world(filename):
         ``ODEWorld``, ``GillespieWorld`` and ``SpatiocyteWorld``.
 
     """
-    import ecell4
+    import ecell4_base
 
-    vinfo = ecell4.core.load_version_information(filename)
+    vinfo = ecell4_base.core.load_version_information(filename)
     if vinfo.startswith("ecell4-bd"):
-        return ecell4.bd.World(filename)
+        return ecell4_base.bd.World(filename)
     elif vinfo.startswith("ecell4-egfrd"):
-        return ecell4.egfrd.World(filename)
+        return ecell4_base.egfrd.World(filename)
     elif vinfo.startswith("ecell4-meso"):
-        return ecell4.meso.World(filename)
+        return ecell4_base.meso.World(filename)
     elif vinfo.startswith("ecell4-ode"):
-        return ecell4.ode.World(filename)
+        return ecell4_base.ode.World(filename)
     elif vinfo.startswith("ecell4-gillespie"):
-        return ecell4.gillespie.World(filename)
+        return ecell4_base.gillespie.World(filename)
     elif vinfo.startswith("ecell4-spatiocyte"):
-        return ecell4.spatiocyte.World(filename)
+        return ecell4_base.spatiocyte.World(filename)
     elif vinfo == "":
         raise RuntimeError("No version information was found in [{0}]".format(filename))
     raise RuntimeError("Unkown version information [{0}]".format(vinfo))
 
 def get_factory(solver, *args):
-    import ecell4
+    import ecell4_base
 
     if solver == 'ode':
-        return ecell4.ode.Factory(*args)
+        return ecell4_base.ode.Factory(*args)
     elif solver == 'gillespie':
-        return ecell4.gillespie.Factory(*args)
+        return ecell4_base.gillespie.Factory(*args)
     elif solver == 'spatiocyte':
-        return ecell4.spatiocyte.Factory(*args)
+        return ecell4_base.spatiocyte.Factory(*args)
     elif solver == 'meso':
-        return ecell4.meso.Factory(*args)
+        return ecell4_base.meso.Factory(*args)
     elif solver == 'bd':
-        return ecell4.bd.Factory(*args)
+        return ecell4_base.bd.Factory(*args)
     elif solver == 'egfrd':
-        return ecell4.egfrd.Factory(*args)
+        return ecell4_base.egfrd.Factory(*args)
     else:
         raise ValueError(
             'unknown solver name was given: ' + repr(solver)
@@ -67,21 +67,21 @@ def get_shape(shape, *args):
     if not isinstance(shape, str):
         raise ValueError("Invalid shape was given [{}]. This must be 'str'".format(repr(shape)))
 
-    import ecell4
+    import ecell4_base
     shape = shape.lower()
     shape_map = {
-        'aabb': ecell4.core.AABB,
-        # 'affinetransformation': ecell4.core.AffineTransformation,
-        'cylinder': ecell4.core.Cylinder,
-        'cylindricalsurface': ecell4.core.CylindricalSurface,
-        'meshsurface': ecell4.core.MeshSurface,
-        'planarsurface': ecell4.core.PlanarSurface,
-        'rod': ecell4.core.Rod,
-        'rodsurface': ecell4.core.RodSurface,
-        'sphere': ecell4.core.Sphere,
-        'sphericalsurface': ecell4.core.SphericalSurface,
-        # 'complement': ecell4.core.Complement,
-        # 'union': ecell4.core.Union,
+        'aabb': ecell4_base.core.AABB,
+        # 'affinetransformation': ecell4_base.core.AffineTransformation,
+        'cylinder': ecell4_base.core.Cylinder,
+        'cylindricalsurface': ecell4_base.core.CylindricalSurface,
+        'meshsurface': ecell4_base.core.MeshSurface,
+        'planarsurface': ecell4_base.core.PlanarSurface,
+        'rod': ecell4_base.core.Rod,
+        'rodsurface': ecell4_base.core.RodSurface,
+        'sphere': ecell4_base.core.Sphere,
+        'sphericalsurface': ecell4_base.core.SphericalSurface,
+        # 'complement': ecell4_base.core.Complement,
+        # 'union': ecell4_base.core.Union,
         }
     if shape in shape_map:
         args = [
@@ -178,7 +178,7 @@ def run_simulation(
             raise ValueError(
                 "An unknown keyword argument was given [{}={}]".format(key, value))
 
-    import ecell4
+    import ecell4_base
 
     if unit.HAS_PINT:
         if isinstance(t, unit._Quantity):
@@ -188,7 +188,7 @@ def run_simulation(
 
         if isinstance(volume, unit._Quantity):
             if unit.STRICT:
-                if isinstance(volume.magnitude, ecell4.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
+                if isinstance(volume.magnitude, ecell4_base.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
                     raise ValueError("Cannot convert [volume] from '{}' ({}) to '[length]'".format(
                         volume.dimensionality, volume.u))
                 elif not unit.check_dimensionality(volume, '[volume]'):
@@ -213,7 +213,7 @@ def run_simulation(
         f = solver
 
     if rndseed is not None:
-        f = f.rng(ecell4.GSLRandomNumberGenerator(rndseed))
+        f = f.rng(ecell4_base.core.GSLRandomNumberGenerator(rndseed))
 
     if model is None:
         model = ecell4.util.decorator.get_model(is_netfree, without_reset)
@@ -230,37 +230,37 @@ def run_simulation(
                 elif unit.check_dimensionality(value, '[substance]'):
                     y0[key] = value.to_base_units().magnitude
                 elif unit.check_dimensionality(value, '[concentration]'):
-                    volume = w.volume() if not isinstance(w, ecell4.spatiocyte.SpatiocyteWorld) else w.actual_volume()
+                    volume = w.volume() if not isinstance(w, ecell4_base.spatiocyte.SpatiocyteWorld) else w.actual_volume()
                     y0[key] = value.to_base_units().magnitude * volume
                 else:
                     raise ValueError(
                         "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
                             key, value.dimensionality, value.u))
 
-    if not isinstance(w, ecell4.ode.ODEWorld):
+    if not isinstance(w, ecell4_base.ode.ODEWorld):
         w.bind_to(model)
 
     for (name, shape) in (structures.items() if isinstance(structures, dict) else structures):
         if isinstance(shape, str):
-            w.add_structure(ecell4.Species(name), get_shape(shape))
+            w.add_structure(ecell4_base.core.Species(name), get_shape(shape))
         elif isinstance(shape, collections.Iterable):
-            w.add_structure(ecell4.Species(name), get_shape(*shape))
+            w.add_structure(ecell4_base.core.Species(name), get_shape(*shape))
         else:
-            w.add_structure(ecell4.Species(name), shape)
+            w.add_structure(ecell4_base.core.Species(name), shape)
 
-    if isinstance(w, ecell4.ode.ODEWorld):
+    if isinstance(w, ecell4_base.ode.ODEWorld):
         # w.bind_to(model)  # stop binding for ode
         for serial, n in y0.items():
-            w.set_value(ecell4.Species(serial), n)
+            w.set_value(ecell4_base.core.Species(serial), n)
     else:
         # w.bind_to(model)
         for serial, n in y0.items():
-            w.add_molecules(ecell4.Species(serial), n)
+            w.add_molecules(ecell4_base.core.Species(serial), n)
 
     if not isinstance(t, collections.Iterable):
         t = [float(t) * i / 100 for i in range(101)]
 
-    obs = ecell4.TimingNumberObserver(t, species_list)
+    obs = ecell4_base.core.TimingNumberObserver(t, species_list)
     sim = f.simulator(w, model)
     # sim = f.simulator(w)
 

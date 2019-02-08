@@ -758,7 +758,7 @@ blob_client.create_blob_from_path(args.storagecontainer,
 def singlerun(job, task_id=0, job_id=0):
     """This task is for an example."""
 
-    import ecell4
+    import ecell4_base
     print('ecell4.__version__ = {:s}'.format(ecell4.__version__))
     print('job={}, task_id={}, job_id={}'.format(str(job), task_id, job_id))
 

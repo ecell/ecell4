@@ -9,7 +9,7 @@ import math
 from . import parseobj
 from ..extra import unit
 
-import ecell4.core
+import ecell4_base.core
 
 RATELAW_RESERVED_FUNCTIONS = {
     'pow': pow, 'exp': math.exp, 'log': math.log,
@@ -41,7 +41,7 @@ def as_quantity(value):
             raise TypeError(
                 "Magnitude must be float. '{}' was given [{}]".format(
                     type(value.magnitude).__name__, value.magnitude))
-        value = ecell4.core.Quantity(value.magnitude, str(value.units))
+        value = ecell4_base.core.Quantity(value.magnitude, str(value.units))
     return value
 
 def generate_species(obj):
@@ -49,7 +49,7 @@ def generate_species(obj):
         raise TypeError(
             "Argument 1 must be AnyCallable or ParseObj."
             " '{}' was given [{}].".format(type(obj).__name__, obj))
-    return ecell4.core.Species(str(obj))
+    return ecell4_base.core.Species(str(obj))
 
 def generate_species_with_coefficient(obj):
     if isinstance(obj, (parseobj.AnyCallable, parseobj.ParseObj)):
@@ -85,7 +85,7 @@ def generate_reaction_rule_options(elements):
 
     opts = {}
     for elem in elements:
-        if isinstance(elem, ecell4.core.ReactionRulePolicy):
+        if isinstance(elem, ecell4_base.core.ReactionRulePolicy):
             if 'policy' not in opts.keys():
                 opts['policy'] = elem.get()
             else:
@@ -102,7 +102,7 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
     if k is None:
         raise RuntimeError('A kinetic rate must be given.')
 
-    rr = ecell4.core.ReactionRule([sp for (sp, _) in lhs], [sp for (sp, _) in rhs])
+    rr = ecell4_base.core.ReactionRule([sp for (sp, _) in lhs], [sp for (sp, _) in rhs])
 
     if (callable(k)  # Function
             or (ratelaw and isinstance(k, (parseobj.ExpBase, parseobj.AnyCallable)))  # Formula
@@ -110,21 +110,21 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
 
         if ratelaw and isinstance(k, (parseobj.ExpBase, parseobj.AnyCallable)):
             func, name = generate_ratelaw(k, rr, implicit)
-            desc = ecell4.core.ReactionRuleDescriptorPyfunc(func, name)
+            desc = ecell4_base.core.ReactionRuleDescriptorPyfunc(func, name)
         elif callable(k):
-            desc = ecell4.core.ReactionRuleDescriptorPyfunc(k, "")
+            desc = ecell4_base.core.ReactionRuleDescriptorPyfunc(k, "")
         else:
-            if not isinstance(k, (numbers.Real, ecell4.core.Quantity)):
+            if not isinstance(k, (numbers.Real, ecell4_base.core.Quantity)):
                 raise TypeError(
                     "A kinetic rate must be float or Quantity."
                     "'{}' was given [{}].".format(type(k).__name__, k))
-            desc = ecell4.core.ReactionRuleDescriptorMassAction(k)
+            desc = ecell4_base.core.ReactionRuleDescriptorMassAction(k)
 
         desc.set_reactant_coefficients([coef or 1 for (_, coef) in lhs])
         desc.set_product_coefficients([coef or 1 for (_, coef) in rhs])
 
         rr.set_descriptor(desc)
-    elif isinstance(k, (numbers.Real, ecell4.core.Quantity)):
+    elif isinstance(k, (numbers.Real, ecell4_base.core.Quantity)):
         rr.set_k(k)
     # elif unit.HAS_PINT and isinstance(k, unit._Quantity):  # Kinetic rate given as a quantity
     #     if unit.STRICT:
@@ -142,7 +142,7 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
             " '{}' was given [{}].".format(type(k).__name__, k))
 
     if policy is not None:
-        if not isinstance(policy, ecell4.core.ReactionRulePolicy):
+        if not isinstance(policy, ecell4_base.core.ReactionRulePolicy):
             raise TypeError(
                 "policy must be ReactionRulePolicy."
                 " '{}' was given [{}].".format(type(policy).__name__, policy))
@@ -204,7 +204,7 @@ class SpeciesParsingVisitor(Visitor):
 
     def visit_species(self, obj):
         assert isinstance(obj, (parseobj.AnyCallable, parseobj.ParseObj))
-        serial = ecell4.core.Species(str(obj)).serial()
+        serial = ecell4_base.core.Species(str(obj)).serial()
         if serial in self.__keys:
             return "{{{0:d}}}".format(self.__keys.index(serial))
         self.__keys.append(serial)
@@ -226,7 +226,7 @@ class SpeciesParsingVisitor(Visitor):
         return obj
 
     def visit_default(self, obj):
-        if not isinstance(obj, (numbers.Real, ecell4.core.Quantity)):
+        if not isinstance(obj, (numbers.Real, ecell4_base.core.Quantity)):
             raise TypeError("An invalid type '{}' was given [{}].".format(type(obj).__name__, obj))
         return Visitor.visit_default(self, obj)
 
@@ -356,8 +356,8 @@ def generate_ratelaw(obj, rr, implicit=False):
         elif implicit:
             names.append("_r[{0:d}]".format(len(rr.reactants())))
             aliases[key] = names[-1]
-            rr.add_reactant(ecell4.core.Species(key))
-            rr.add_product(ecell4.core.Species(key))
+            rr.add_reactant(ecell4_base.core.Species(key))
+            rr.add_product(ecell4_base.core.Species(key))
         else:
             raise RuntimeError('[{}] is unknown [{}].'.format(key, obj))
 

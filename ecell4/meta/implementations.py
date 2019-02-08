@@ -3,7 +3,7 @@
 import math
 import collections
 from coordinator import SimulatorAdapter, DiscreteEvent, DiscreteTimeEvent, EventKind
-from ecell4.core import Real3, Integer3, Species, ReactionRule, GSLRandomNumberGenerator, ParticleID, Voxel, Particle
+from ecell4_base.core import Real3, Integer3, Species, ReactionRule, GSLRandomNumberGenerator, ParticleID, Voxel, Particle
 from ecell4 import gillespie, meso, spatiocyte, egfrd, ode
 
 
