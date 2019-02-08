@@ -1,6 +1,6 @@
 import pathlib
 
-from ecell4.core import _save_bd5
+from ecell4_base.core import _save_bd5
 from ecell4.util.simulation import load_world
 
 def save_bd5(

@@ -149,7 +149,7 @@ class ProgressBarSimulatorWrapper:
             observers
 
         """
-        from ecell4.core import TimeoutObserver
+        from ecell4_base.core import TimeoutObserver
 
         timeout = TimeoutObserver(self.__timeout)
         if isinstance(obs, collections.Iterable):

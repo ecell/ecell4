@@ -3,7 +3,7 @@ import copy
 import warnings
 import re
 
-import ecell4
+import ecell4_base
 
 from ..extra import unit
 
@@ -62,7 +62,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
     if unit.HAS_PINT:
         if isinstance(volume, unit._Quantity):
             if unit.STRICT:
-                if isinstance(volume.magnitude, ecell4.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
+                if isinstance(volume.magnitude, ecell4_base.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
                     raise ValueError("Cannot convert [volume] from '{}' ({}) to '[length]'".format(
                         volume.dimensionality, volume.u))
                 elif not unit.check_dimensionality(volume, '[volume]'):
@@ -85,7 +85,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
                         "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
                             key, value.dimensionality, value.u))
 
-    if isinstance(volume, ecell4.core.Real3):
+    if isinstance(volume, ecell4_base.core.Real3):
         comp1.setSize(volume[0] * volume[1] * volume[2])
     else:
         comp1.setSize(volume)
@@ -144,7 +144,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
                 else:
                     species_coef_map[sp] += coef
 
-        if desc is None or isinstance(desc, ecell4.core.ReactionRuleDescriptorMassAction):
+        if desc is None or isinstance(desc, ecell4_base.core.ReactionRuleDescriptorMassAction):
             p1 = m.createParameter()
             p1.setId("k{:d}".format(cnt))
             # p1 = kinetic_law.createLocalParameter()
@@ -159,7 +159,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
                     math_exp += "*{:s}".format(sid)
                 else:
                     math_exp += "*pow({:s},{:g})".format(sid, coef)
-        elif isinstance(desc, ecell4.core.ReactionRuleDescriptorPyfunc):
+        elif isinstance(desc, ecell4_base.core.ReactionRuleDescriptorPyfunc):
             math_exp = desc.as_string()
             if math_exp in ('', '<lambda>'):
                 warnings.warn(
@@ -341,13 +341,13 @@ def import_sbml(document):
             or any([coef not in (1, 2) for sp, coef in reactants])
             or any([not coef.is_integer() for sp, coef in products])
             or (len(reactants) == 2 and (reactants[0][1] == 2 or reactants[1][1] == 2))):
-            rr = ecell4.core.ReactionRule()
+            rr = ecell4_base.core.ReactionRule()
 
             if is_massaction:
-                desc = ecell4.core.ReactionRuleDescriptorMassAction(k)
+                desc = ecell4_base.core.ReactionRuleDescriptorMassAction(k)
             else:
                 func = generate_ratelaw(k, rr)
-                desc = ecell4.core.ReactionRuleDescriptorPyfunc(func, k)
+                desc = ecell4_base.core.ReactionRuleDescriptorPyfunc(func, k)
 
             desc.set_reactant_coefficients([coef for _, coef in reactants])
             desc.set_product_coefficients([coef for _, coef in products])
@@ -358,17 +358,17 @@ def import_sbml(document):
                 reactants[0] = (reactants[0][0], 1)
                 reactants.append(reactants[0])
 
-            rr = ecell4.core.ReactionRule()
+            rr = ecell4_base.core.ReactionRule()
             for serial, coef in reactants:
-                rr.add_reactant(ecell4.core.Species(serial))
+                rr.add_reactant(ecell4_base.core.Species(serial))
             for serial, coef in products:
                 for _ in range(int(coef)):
-                    rr.add_product(ecell4.core.Species(serial))
+                    rr.add_product(ecell4_base.core.Species(serial))
             rr.set_k(k)
 
         rrs.append(rr)
 
-    m = ecell4.core.NetworkModel()
+    m = ecell4_base.core.NetworkModel()
     for rr in rrs:
         m.add_reaction_rule(rr)
 

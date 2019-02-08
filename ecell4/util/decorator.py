@@ -13,7 +13,7 @@ from .model_parser import (
     as_quantity
     )
 
-import ecell4.core
+import ecell4_base.core
 
 SPECIES_ATTRIBUTES = []
 REACTION_RULES = []
@@ -62,7 +62,7 @@ class SpeciesAttributesCallback(Callback):
                         " '{}' was given [{}].".format(type(key).__name__, key))
 
                 value = as_quantity(value)
-                if not isinstance(value, (numbers.Real, str, bool, ecell4.core.Quantity)):
+                if not isinstance(value, (numbers.Real, str, bool, ecell4_base.core.Quantity)):
                     raise TypeError(
                         "Attribute value must be int, float, string, boolean or Quantity."
                         " '{}' was given [{}].".format(type(value).__name__, value))
@@ -170,9 +170,9 @@ def get_model(is_netfree=False, without_reset=False, seeds=None, effective=False
     """
     try:
         if seeds is not None or is_netfree:
-            m = ecell4.core.NetfreeModel()
+            m = ecell4_base.core.NetfreeModel()
         else:
-            m = ecell4.core.NetworkModel()
+            m = ecell4_base.core.NetworkModel()
 
         for sp in SPECIES_ATTRIBUTES:
             m.add_species_attribute(sp)
@@ -185,7 +185,7 @@ def get_model(is_netfree=False, without_reset=False, seeds=None, effective=False
         if seeds is not None:
             return m.expand(seeds)
 
-        if isinstance(m, ecell4.core.NetfreeModel):
+        if isinstance(m, ecell4_base.core.NetfreeModel):
             m.set_effective(effective)
     except Exception as e:
         reset_model()

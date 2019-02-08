@@ -52,8 +52,8 @@ class BioCycDataSource(object):
             # if mobj is not None:
             #     return mobj.group('id')
         else:
-            import ecell4
-            if isinstance(entity, ecell4.core.Species) and entity.has_attribute(collection):
+            import ecell4_base
+            if isinstance(entity, ecell4_base.core.Species) and entity.has_attribute(collection):
                 return cls.parse_entity(entity.get_attribute(collection))
         return None  #XXX: Error
 

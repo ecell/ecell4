@@ -4,7 +4,7 @@ except ImportError:
     raise RuntimeError(
         'ecell4.extra.vtkview needs a python support for VTK. Install python-vtk.')
 
-import ecell4
+import ecell4_base
 import os.path
 import argparse
 import sys
@@ -111,7 +111,7 @@ def list_species(w):
     #XXX: This would be a bit slow to list all species within a World
     species_list = [p.species().serial() for pid, p in w.list_particles()]
     species_list = sorted(set(species_list), key=species_list.index)  # XXX: pick unique ones
-    species_list = [ecell4.core.Species(serial) for serial in species_list]
+    species_list = [ecell4_base.core.Species(serial) for serial in species_list]
     return species_list
 
 def add_actors(w, ren, source):
@@ -159,10 +159,10 @@ def add_volume(w, ren, N=50, c=(0, 1, 0)):
     tmp = numpy.zeros([N, N, N], dtype=float)
     for sp in list_species(w):
     # for serial in ("MinD_M", "MinDE"):
-    #     sp = ecell4.core.Species(serial)
+    #     sp = ecell4_base.core.Species(serial)
         for pid, p in w.list_particles(sp):
             pos = p.position() / L - shift
-            pos = (pos + ecell4.core.Real3(0.5, 0.5, 0.5)) * N
+            pos = (pos + ecell4_base.core.Real3(0.5, 0.5, 0.5)) * N
             tmp[int(pos[2])][int(pos[1])][int(pos[0])] += 1
 
     data_matrix = numpy.zeros([N, N, N], dtype=numpy.uint8)

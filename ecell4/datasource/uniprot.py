@@ -127,8 +127,8 @@ class UniProtLocationDataSource(UniProtDataSourceBase):
                 else:
                     return mobj.group('id')
         # else:
-        #     import ecell4
-        #     if isinstance(entity, ecell4.core.Species) and entity.has_attribute(collection):
+        #     import ecell4_base
+        #     if isinstance(entity, ecell4_base.core.Species) and entity.has_attribute(collection):
         #         return cls.parse_entity(entity.get_attribute(collection))
         return None  #XXX: Error
 
@@ -210,8 +210,8 @@ class UniProtDataSource(UniProtDataSourceBase):
             if mobj is not None:
                 return mobj.group('id')
         else:
-            import ecell4
-            if isinstance(entity, ecell4.core.Species) and entity.has_attribute(collection):
+            import ecell4_base
+            if isinstance(entity, ecell4_base.core.Species) and entity.has_attribute(collection):
                 return cls.parse_entity(entity.get_attribute(collection))
         return None  #XXX: Error
 
@@ -429,7 +429,7 @@ class UniProtDataSource(UniProtDataSourceBase):
     def biogrid(self):
         return self.database("BioGrid")
 
-# from ecell4.core import Species
+# from ecell4_base.core import Species
 # try:
 #     from urllib2 import Request, urlopen
 # except ImportError:
