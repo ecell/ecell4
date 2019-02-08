@@ -213,7 +213,7 @@ def run_simulation(
         f = solver
 
     if rndseed is not None:
-        f = f.rng(ecell4.GSLRandomNumberGenerator(rndseed))
+        f = f.rng(ecell4.core.GSLRandomNumberGenerator(rndseed))
 
     if model is None:
         model = ecell4.util.decorator.get_model(is_netfree, without_reset)
@@ -242,25 +242,25 @@ def run_simulation(
 
     for (name, shape) in (structures.items() if isinstance(structures, dict) else structures):
         if isinstance(shape, str):
-            w.add_structure(ecell4.Species(name), get_shape(shape))
+            w.add_structure(ecell4.core.Species(name), get_shape(shape))
         elif isinstance(shape, collections.Iterable):
-            w.add_structure(ecell4.Species(name), get_shape(*shape))
+            w.add_structure(ecell4.core.Species(name), get_shape(*shape))
         else:
-            w.add_structure(ecell4.Species(name), shape)
+            w.add_structure(ecell4.core.Species(name), shape)
 
     if isinstance(w, ecell4.ode.ODEWorld):
         # w.bind_to(model)  # stop binding for ode
         for serial, n in y0.items():
-            w.set_value(ecell4.Species(serial), n)
+            w.set_value(ecell4.core.Species(serial), n)
     else:
         # w.bind_to(model)
         for serial, n in y0.items():
-            w.add_molecules(ecell4.Species(serial), n)
+            w.add_molecules(ecell4.core.Species(serial), n)
 
     if not isinstance(t, collections.Iterable):
         t = [float(t) * i / 100 for i in range(101)]
 
-    obs = ecell4.TimingNumberObserver(t, species_list)
+    obs = ecell4.core.TimingNumberObserver(t, species_list)
     sim = f.simulator(w, model)
     # sim = f.simulator(w)
 

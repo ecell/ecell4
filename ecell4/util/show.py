@@ -24,9 +24,9 @@ def show(target, *args, **kwargs):
         When a World or a filename suggesting HDF5 is given, show it with viz.plot_world.
 
     """
-    if isinstance(target, (ecell4.FixedIntervalNumberObserver, ecell4.NumberObserver, ecell4.TimingNumberObserver, )):
+    if isinstance(target, (ecell4.core.FixedIntervalNumberObserver, ecell4.core.NumberObserver, ecell4.core.TimingNumberObserver, )):
         plot_number_observer(target, *args, **kwargs)
-    elif isinstance(target, (ecell4.FixedIntervalTrajectoryObserver, ecell4.FixedIntervalTrackingObserver)):
+    elif isinstance(target, (ecell4.core.FixedIntervalTrajectoryObserver, ecell4.core.FixedIntervalTrackingObserver)):
         plot_trajectory(target, *args, **kwargs)
     elif isinstance(target, (ecell4.ode.ODEWorld, ecell4.gillespie.GillespieWorld, ecell4.spatiocyte.SpatiocyteWorld, ecell4.meso.MesoscopicWorld, ecell4.bd.BDWorld, ecell4.egfrd.EGFRDWorld)):
         plot_world(target, *args, **kwargs)

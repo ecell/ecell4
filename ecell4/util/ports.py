@@ -85,7 +85,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
                         "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
                             key, value.dimensionality, value.u))
 
-    if isinstance(volume, ecell4.Real3):
+    if isinstance(volume, ecell4.core.Real3):
         comp1.setSize(volume[0] * volume[1] * volume[2])
     else:
         comp1.setSize(volume)
@@ -358,17 +358,17 @@ def import_sbml(document):
                 reactants[0] = (reactants[0][0], 1)
                 reactants.append(reactants[0])
 
-            rr = ecell4.ReactionRule()
+            rr = ecell4.core.ReactionRule()
             for serial, coef in reactants:
-                rr.add_reactant(ecell4.Species(serial))
+                rr.add_reactant(ecell4.core.Species(serial))
             for serial, coef in products:
                 for _ in range(int(coef)):
-                    rr.add_product(ecell4.Species(serial))
+                    rr.add_product(ecell4.core.Species(serial))
             rr.set_k(k)
 
         rrs.append(rr)
 
-    m = ecell4.NetworkModel()
+    m = ecell4.core.NetworkModel()
     for rr in rrs:
         m.add_reaction_rule(rr)
 

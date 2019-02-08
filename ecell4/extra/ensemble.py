@@ -715,7 +715,7 @@ def ensemble_simulations(
             else:
                 self.__error = None
 
-            self.__species_list = [ecell4.Species(serial) for serial in species_list]
+            self.__species_list = [ecell4.core.Species(serial) for serial in species_list]
 
         def targets(self):
             return self.__species_list

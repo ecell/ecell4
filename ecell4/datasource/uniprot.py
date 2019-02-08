@@ -128,7 +128,7 @@ class UniProtLocationDataSource(UniProtDataSourceBase):
                     return mobj.group('id')
         # else:
         #     import ecell4
-        #     if isinstance(entity, ecell4.Species) and entity.has_attribute(collection):
+        #     if isinstance(entity, ecell4.core.Species) and entity.has_attribute(collection):
         #         return cls.parse_entity(entity.get_attribute(collection))
         return None  #XXX: Error
 
@@ -211,7 +211,7 @@ class UniProtDataSource(UniProtDataSourceBase):
                 return mobj.group('id')
         else:
             import ecell4
-            if isinstance(entity, ecell4.Species) and entity.has_attribute(collection):
+            if isinstance(entity, ecell4.core.Species) and entity.has_attribute(collection):
                 return cls.parse_entity(entity.get_attribute(collection))
         return None  #XXX: Error
 
