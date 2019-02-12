@@ -331,7 +331,7 @@ def number_observer(t=None, targets=None):
     -------
     obs : NumberObserver, FixedIntervalNumberObserver or TimingNumberObserver
     """
-    from ecell4 import NumberObserver, FixedIntervalNumberObserver, TimingNumberObserver
+    from ecell4_base.core import NumberObserver, FixedIntervalNumberObserver, TimingNumberObserver
 
     if t is None:
         return NumberObserver(targets)
