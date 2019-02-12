@@ -582,7 +582,7 @@ def list_species(model, seeds=None):
     """This function is deprecated."""
     seeds = None or []
 
-    from ecell4 import Species
+    from ecell4_base.core import Species
 
     if not isinstance(seeds, list):
         seeds = list(seeds)

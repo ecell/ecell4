@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import collections
-from ecell4 import Species
+from ecell4_base.core import Species
 
 
 class Logger:
