@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import numbers
 
-from ecell4 import Species, ReactionRule, ReactionRuleDescriptorMassAction, ReactionRuleDescriptorPyfunc
+from ecell4_base.core import Species, ReactionRule, ReactionRuleDescriptorMassAction, ReactionRuleDescriptorPyfunc
 
 from ecell4.util import parseobj
 from ecell4.util.decorator_base import just_parse

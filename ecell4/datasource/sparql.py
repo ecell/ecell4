@@ -1,3 +1,5 @@
+from ecell4_base.core import Species, ReactionRule, NetworkModel
+
 from SPARQLWrapper import SPARQLWrapper, JSON
 from collections import defaultdict
 
@@ -96,7 +98,6 @@ WHERE
             model.add_species_attribute(s)
 
 if __name__ == '__main__':
-    from ecell4 import *
     m1 = NetworkModel()
     upds = UniprotDataSource()
     upds.create_species('4932', m1)

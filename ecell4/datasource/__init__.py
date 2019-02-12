@@ -29,7 +29,7 @@ def __description(entity, collections):
     return desc
 
 def description(entity, collections=None):
-    from ecell4 import Species
+    from ecell4_base.core import Species
 
     if isinstance(collections, str):
         collections = [collections]

@@ -357,7 +357,7 @@ def __parse_world(
     (name, coordinates and particle size) for each species.
 
     """
-    from ecell4 import Species
+    from ecell4_base.core import Species
 
     if species_list is None:
         species_list = [
@@ -416,7 +416,7 @@ def __get_range_of_world(world, scale=1.0):
     return {'x': rangex, 'y': rangey, 'z': rangez}
 
 def __get_range_of_trajectories(data, plot_range=None):
-    from ecell4 import Real3
+    from ecell4_base.core import Real3
 
     if plot_range is None:
         if len(data) == 0:
@@ -1069,7 +1069,7 @@ def __prepare_mplot3d_with_matplotlib(
 
 def __scatter_world_with_matplotlib(
         world, ax, species_list, marker_size, max_count, **kwargs):
-    from ecell4 import Species
+    from ecell4_base.core import Species
     color_scale = matplotlib_color_scale()
 
     scatters, plots = [], []
@@ -1341,7 +1341,7 @@ def plot_movie_of_trajectory2d_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from IPython.display import display, HTML
-    from ecell4 import Species, FixedIntervalHDF5Observer
+    from ecell4_base.core import Species, FixedIntervalHDF5Observer
     from .simulation import load_world
     import math
 
@@ -1452,7 +1452,7 @@ def plot_movie_with_matplotlib(
     """
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
-    from ecell4 import Species, FixedIntervalHDF5Observer
+    from ecell4_base.core import Species, FixedIntervalHDF5Observer
     from .simulation import load_world
 
     # print("Start generating species_list ...")
@@ -1575,7 +1575,7 @@ def plot_movie_of_trajectory_with_matplotlib(
     """
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
-    from ecell4 import Species, FixedIntervalHDF5Observer
+    from ecell4_base.core import Species, FixedIntervalHDF5Observer
     from .simulation import load_world
     import math
 
@@ -1747,7 +1747,7 @@ def __prepare_mplot3d_with_attractive_mpl(
 
 def __scatter_world_with_attractive_mpl(
         world, ax, species_list, marker_size, max_count, scale, **kwargs):
-    from ecell4 import Species
+    from ecell4_base.core import Species
     color_scale = attractive_mpl_color_scale({})
 
     scatters, plots = [], []
@@ -1819,7 +1819,7 @@ def plot_movie_with_attractive_mpl(
     """
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
-    from ecell4 import Species, FixedIntervalHDF5Observer
+    from ecell4_base.core import Species, FixedIntervalHDF5Observer
     from .simulation import load_world
     import os.path
 
@@ -1973,7 +1973,7 @@ def plot_world2d_with_matplotlib(
 
 def __scatter_world2d_with_matplotlib(
         world, indices, ax, species_list, marker_size, max_count, scale, **kwargs):
-    from ecell4 import Species
+    from ecell4_base.core import Species
     color_scale = matplotlib_color_scale()
 
     scatters, plots = [], []
@@ -2044,7 +2044,7 @@ def plot_movie2d_with_matplotlib(
     """
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
-    from ecell4 import Species, FixedIntervalHDF5Observer
+    from ecell4_base.core import Species, FixedIntervalHDF5Observer
     from .simulation import load_world
 
     plane = plane.lower()
@@ -2144,7 +2144,7 @@ def plot_world_with_plotly(world, species_list=None, max_count=1000):
         species_list.sort()
 
     import random
-    from ecell4 import Species
+    from ecell4_base.core import Species
 
     positions = {}
     for serial in species_list:

@@ -2,7 +2,7 @@
 
 import math
 import collections
-from ecell4 import *
+from ecell4_base.core import *
 
 
 class SimulatorAdapter:
