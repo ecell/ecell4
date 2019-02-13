@@ -19,5 +19,5 @@ setup(
     author_email='kaizu@riken.jp',
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    install_requires=['ecell4-base']
+    install_requires=['ecell4-base', 'matplotlib']
 )
