@@ -1,10 +1,9 @@
-# ecell4-extras
+# ecell4
 
-This provides extra libraries for E-Cell System version 4.
+This provides pure Python libraries for E-Cell System version 4.
 
 ## Installation
 
 ```
-git clone git://github.com/ecell/ecell4-extras
-pip install -e ecell4-extras
+pip install ecell4
 ```
