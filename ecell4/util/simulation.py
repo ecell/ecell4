@@ -216,7 +216,7 @@ def run_simulation(
         f = f.rng(ecell4_base.core.GSLRandomNumberGenerator(rndseed))
 
     if model is None:
-        model = ecell4.util.decorator.get_model(is_netfree, without_reset)
+        model = get_model(is_netfree, without_reset)
 
     w = f.world(volume)
     edge_lengths = w.edge_lengths()
@@ -277,19 +277,19 @@ def run_simulation(
 
     if return_type in ('matplotlib', 'm'):
         if isinstance(opt_args, (list, tuple)):
-            ecell4.viz.plot_number_observer(obs, *opt_args, **opt_kwargs)
+            viz.plot_number_observer(obs, *opt_args, **opt_kwargs)
         elif isinstance(opt_args, dict):
             # opt_kwargs is ignored
-            ecell4.viz.plot_number_observer(obs, **opt_args)
+            viz.plot_number_observer(obs, **opt_args)
         else:
             raise ValueError('opt_args [{}] must be list or dict.'.format(
                 repr(opt_args)))
     elif return_type in ('nyaplot', 'n'):
         if isinstance(opt_args, (list, tuple)):
-            ecell4.viz.plot_number_observer_with_nya(obs, *opt_args, **opt_kwargs)
+            viz.plot_number_observer_with_nya(obs, *opt_args, **opt_kwargs)
         elif isinstance(opt_args, dict):
             # opt_kwargs is ignored
-            ecell4.viz.plot_number_observer_with_nya(obs, **opt_args)
+            viz.plot_number_observer_with_nya(obs, **opt_args)
         else:
             raise ValueError('opt_args [{}] must be list or dict.'.format(
                 repr(opt_args)))

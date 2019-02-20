@@ -759,13 +759,17 @@ def singlerun(job, task_id=0, job_id=0):
     """This task is for an example."""
 
     import ecell4_base
+    import ecell4
+    import ecell4.util.simulation
+    import ecell4.util.decorator
+    print('ecell4_base.__version__ = {:s}'.format(ecell4_base.__version__))
     print('ecell4.__version__ = {:s}'.format(ecell4.__version__))
     print('job={}, task_id={}, job_id={}'.format(str(job), task_id, job_id))
 
-    with ecell4.reaction_rules():
+    with ecell4.util.decorator.reaction_rules():
         A + B == C | (0.01, 0.3)
 
-    res = ecell4.run_simulation(
+    res = ecell4.util.simulation.run_simulation(
         10.0,
         y0={'A': job[0], 'B': job[1], 'C': job[2]},
         rndseed=job_id,

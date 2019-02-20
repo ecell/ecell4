@@ -566,11 +566,11 @@ def getseed(myseed, i):
 #XXX:
 
 def singlerun(job, job_id, task_id):
-    import ecell4.util
+    import ecell4.util.simulation
     import ecell4.extra.ensemble
     rndseed = ecell4.extra.ensemble.getseed(job.pop('myseed'), task_id)
     job.update({'return_type': 'array', 'rndseed': rndseed})
-    data = ecell4.util.run_simulation(**job)
+    data = ecell4.util.simulation.run_simulation(**job)
     return data
 
 import ecell4.util.decorator
@@ -602,7 +602,7 @@ def ensemble_simulations(
     **kwargs):
     """
     Run simulations multiple times and return its ensemble.
-    Arguments are almost same with ``ecell4.util.run_simulation``.
+    Arguments are almost same with ``ecell4.util.simulation.run_simulation``.
     `observers` and `progressbar` is not available here.
 
     Parameters
@@ -633,7 +633,7 @@ def ensemble_simulations(
 
     See Also
     --------
-    ecell4.util.run_simulation
+    ecell4.util.simulation.run_simulation
     ecell4.extra.ensemble.run_serial
     ecell4.extra.ensemble.run_sge
     ecell4.extra.ensemble.run_slurm
