@@ -19,6 +19,9 @@ RATELAW_RESERVED_FUNCTIONS = {
 
 RATELAW_RESERVED_CONSTANTS = {
     '_t': None,  #XXX: just reserved
+    '_v': None,  #XXX: just reserved
+    '_rc': None,  #XXX: just reserved
+    '_pc': None,  #XXX: just reserved
     'pi': math.pi
     }
 
@@ -228,7 +231,8 @@ class SpeciesParsingVisitor(Visitor):
         return obj
 
     def visit_default(self, obj):
-        if not isinstance(obj, (numbers.Real, ecell4_base.core.Quantity)):
+        if (not isinstance(obj, (numbers.Real, ecell4_base.core.Quantity))
+                and not (str(obj) in RATELAW_RESERVED_CONSTANTS and RATELAW_RESERVED_CONSTANTS[str(obj)] is None)):
             raise TypeError("An invalid type '{}' was given [{}].".format(type(obj).__name__, obj))
         return Visitor.visit_default(self, obj)
 
