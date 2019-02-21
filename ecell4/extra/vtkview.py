@@ -5,6 +5,7 @@ except ImportError:
         'ecell4.extra.vtkview needs a python support for VTK. Install python-vtk.')
 
 import ecell4_base
+import ecell4.util.simulation
 import os.path
 import argparse
 import sys
@@ -62,7 +63,7 @@ class vtkTimerCallback():
         renWin.SetWindowName(filename)
         ren = renWin.GetRenderers().GetFirstRenderer()
         remove_all_actors_and_volumes(ren)
-        w = ecell4.util.load_world(filename)
+        w = ecell4.util.simulation.load_world(filename)
         if self.volume:
             add_volume(w, ren)
         else:
