@@ -120,8 +120,10 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
                     "'{}' was given [{}].".format(type(k).__name__, k))
             desc = ecell4_base.core.ReactionRuleDescriptorMassAction(k)
 
-        desc.set_reactant_coefficients([coef or 1 for (_, coef) in lhs])
-        desc.set_product_coefficients([coef or 1 for (_, coef) in rhs])
+        reactant_coefficients = [coef or 1 for (_, coef) in lhs] + [1 for _ in range(len(rr.reactants()) - len(lhs))]
+        desc.set_reactant_coefficients(reactant_coefficients)
+        product_coefficients = [coef or 1 for (_, coef) in rhs] + [1 for _ in range(len(rr.products()) - len(rhs))]
+        desc.set_product_coefficients(product_coefficients)
 
         rr.set_descriptor(desc)
     elif isinstance(k, (numbers.Real, ecell4_base.core.Quantity)):
