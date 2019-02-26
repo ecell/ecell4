@@ -370,5 +370,5 @@ def generate_ratelaw(obj, rr, implicit=False):
     exp = exp.format(*names)
     f = eval("lambda _r, _p, _v, _t, _rc, _pc: {}".format(exp))
     f.__globals__.update(RATELAW_RESERVED_FUNCTIONS)
-    f.__globals__.update((key, val) for key, val in RATELAW_RESERVED_CONSTANTS if val is not None)
+    f.__globals__.update((key, val) for key, val in RATELAW_RESERVED_CONSTANTS.items() if val is not None)
     return (f, label)
