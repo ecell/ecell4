@@ -90,9 +90,9 @@ def generate_reaction_rule_options(elements):
     for elem in elements:
         if isinstance(elem, ecell4_base.core.ReactionRulePolicy):
             if 'policy' not in opts.keys():
-                opts['policy'] = elem.get()
+                opts['policy'] = elem
             else:
-                opts['policy'] |= elem.get()
+                opts['policy'] = ecell4_base.core.ReactionRulePolicy(opts['policy'].get() | elem.get())
         else:
             if 'k' in opts.keys():
                 raise RuntimeError(
@@ -151,7 +151,7 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
             raise TypeError(
                 "policy must be ReactionRulePolicy."
                 " '{}' was given [{}].".format(type(policy).__name__, policy))
-        rr.set_policy(policy)
+        rr.set_policy(policy.get())
 
     return rr
 
