@@ -1089,7 +1089,7 @@ def __scatter_world_with_matplotlib(
         scatters.append(
             ax.scatter(
                 xs, ys, zs,
-                marker='o', s=(2 ** marker_size), lw=0, c=c,
+                marker='o', s=(2 ** marker_size), lw=0, facecolor=c,
                 label=name, **kwargs))
         plots.extend(ax.plot([], [], 'o', c=c, label=name))  #XXX: A dirty hack to show the legends with keeping the 3d transparency effect on scatter
     return scatters, plots
@@ -1513,7 +1513,7 @@ def plot_movie_with_matplotlib(
     for i, name in enumerate(species_list):
         scatters.append(
             ax.scatter([], [], [], marker='o', s=(2 ** marker_size),
-                       lw=0, c=color_scale.get_color(name), label=name))
+                       lw=0, facecolor=color_scale.get_color(name), label=name))
 
     # if legend:
     #     ax.legend(loc='best', shadow=True)
@@ -1767,7 +1767,7 @@ def __scatter_world_with_attractive_mpl(
         opts = dict(marker='o', s=(2 ** marker_size), edgecolors='white', alpha=0.7)
         opts.update(kwargs)
         scatters.append(
-            ax.scatter(xs, ys, zs, c=c, label=name, **opts))
+            ax.scatter(xs, ys, zs, facecolor=c, label=name, **opts))
         # plots.extend(ax.plot([], [], 'o', c=c, markeredgecolor='white', label=name))  #XXX: A dirty hack to show the legends with keeping the 3d transparency effect on scatter
     return scatters, plots
 
@@ -1884,7 +1884,7 @@ def plot_movie_with_attractive_mpl(
         opts.update(kwargs)
         scatters.append(
             ax.scatter(
-                [], [], [], c=color_scale.get_color(name), label=name, **opts))
+                [], [], [], facecolor=color_scale.get_color(name), label=name, **opts))
 
     # if legend:
     #     ax.legend(loc='best', shadow=True)
@@ -1992,7 +1992,7 @@ def __scatter_world2d_with_matplotlib(
         scatters.append(
             ax.scatter(
                 xs, ys,
-                marker='o', s=(2 ** marker_size), lw=0, c=c,
+                marker='o', s=(2 ** marker_size), lw=0, facecolor=c,
                 label=name, **kwargs))
     return scatters, plots
 
@@ -2116,7 +2116,7 @@ def plot_movie2d_with_matplotlib(
 
             ax.scatter(
                 offsets[0], offsets[1], marker='o', s=(2 ** marker_size),
-               lw=0, c=color_scale.get_color(name), label=name)
+                lw=0, facecolor=color_scale.get_color(name), label=name)
 
         if legend is not None and legend is not False and _legend:
             legend_opts = {"loc": "upper right", "shadow": True}
