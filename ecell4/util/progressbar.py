@@ -173,6 +173,111 @@ class ProgressBarSimulatorWrapper:
 
 progressbar = ProgressBarSimulatorWrapper
 
+class ProgressBarNotebook:
+    """A wrapper class to show a progress bar for running a simulation
+    """
+
+    def __init__(self, sim, timeout=10, wait=0.3, **kwargs):
+        """Constructor.
+
+        Parameters
+        ----------
+        sim : Simulator
+            A wrapped Simulator object
+        timeout : float, optional
+            An interval to update the progress bar. Given as seconds.
+            Default is 10.
+        wait : float, optional
+            A waiting time for refleshing the progress bar.
+            Given as seconds. Default is 0.3.
+
+        """
+        if int(timeout) <= 0:
+            raise ValueError(
+                'timeout [{}] must be larger than 1.'.format(timeout))
+        elif wait < 0:
+            raise ValueError('wait [{}] must be non-negative'.format(wait))
+
+        self.__sim = sim
+        self.__timeout = timeout
+        self.__wait = wait
+        self.__kwargs = kwargs
+
+        self.__last = (0.0, 0.0)
+
+    @staticmethod
+    def format_eta(eta):
+        eta = int(eta)
+        seconds = eta % 60
+        eta //= 60
+        minutes = eta % 60
+        eta //= 60
+        hours = eta % 24
+        eta //= 24
+        if eta > 0:
+            days = eta
+            return '{:d} {:02d}:{:02d}:{:02d}'.format(days, hours, minutes, seconds)
+        else:
+            return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
+
+    def get_text(self, progress, elapsed):
+        info = '  {:>5.1f}%'.format(progress * 100)
+        if elapsed is not None:
+            info += '  Elapsed:  ' + self.format_eta(elapsed)
+            # info += '  Elapsed:  ' + "{}".format(elapsed)
+            if progress > self.__last[0]:
+                # speed = elapsed / progress
+                speed = (elapsed - self.__last[1]) / (progress - self.__last[0])
+                info += ' ETA:  ' + self.format_eta(speed * (1.0 - progress))
+                # info += ' ETA:  ' + "{}".format(speed * (1.0 - progress))
+            self.__last = (progress, elapsed)
+        return info
+
+    def run(self, duration, obs):
+        """Run the simulation.
+
+        Parameters
+        ----------
+        duration : Real
+            a duration for running a simulation.
+                A simulation is expected to be stopped at t() + duration.
+        observers : list of Obeservers, optional
+            observers
+
+        """
+        from ecell4_base.core import TimeoutObserver
+
+        timeout = TimeoutObserver(self.__timeout)
+        if isinstance(obs, collections.Iterable):
+            obs = tuple(obs) + (timeout, )
+        else:
+            obs = (obs, timeout)
+
+        from ipywidgets import FloatProgress, HBox, HTML
+        from IPython.display import display
+        from time import sleep
+
+        fp = FloatProgress(min=0, max=100)
+        ptext = HTML()
+        display(HBox(children=[fp, ptext]))
+
+        tstart = self.__sim.t()
+        upto = tstart + duration
+        while self.__sim.t() < upto:
+            self.__sim.run(upto - self.__sim.t(), obs)
+            value = (self.__sim.t() - tstart) / duration
+            fp.value = value * 100
+            ptext.value = self.get_text(value, timeout.accumulation())
+            sleep(self.__wait)
+
+        fp.value = 100
+        ptext.value = self.get_text(1, timeout.accumulation())
+
+    def __getattr__(self, key):
+        return getattr(self.__sim, key)
+
+progressbar_notebook = ProgressBarNotebook
+
 
 if __name__ == "__main__":
     import time
