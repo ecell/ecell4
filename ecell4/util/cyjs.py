@@ -8,9 +8,12 @@ from IPython.core.display import display, HTML
 
 def init_cyjs():
     from IPython.core.display import display, HTML
-    path = os.path.abspath(os.path.dirname(__file__)) + '/templates/init_cyjs.js'
-    # print path
-    html = open(path).read()
+    # path = os.path.abspath(os.path.dirname(__file__)) + '/templates/init_cyjs.js'
+    # # print path
+    # html = open(path).read()
+    import pkgutil
+    package_name, tmpl_path = 'ecell4.util', 'templates/init_cyjs.js'
+    html = pkgutil.get_data(package_name, tmpl_path).decode()
     return display(HTML(html))
 
 def plot_species(species):

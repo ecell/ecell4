@@ -347,7 +347,7 @@ def plot_number_observer_with_nya(obs, config=None, width=600, height=400, x=Non
     model_id = 'viz{0:s}'.format(str(uuid.uuid4()))
     display(HTML(generate_html(
         {'model': json.dumps(model), 'model_id': model_id, 'to_png': json.dumps(to_png)},
-        '/templates/nya.tmpl')))
+        'templates/nya.tmpl')))
 
 def __parse_world(
         world, radius=None, species_list=None, max_count=None,
@@ -536,7 +536,7 @@ def plot_movie_with_elegans(
                               for name in data.keys()]),
         'sizes': json.dumps([sizes[name] for name in data.keys()]),
         'options': json.dumps(options)
-    }, '/templates/movie.tmpl')))
+    }, 'templates/movie.tmpl')))
 
 def plot_world_with_elegans(
         world, radius=None, width=350, height=350, config=None, grid=True,
@@ -642,7 +642,7 @@ def plot_world_with_elegans(
         {'model': json.dumps(model), 'model_id': model_id,
         'px': camera_position[0], 'py': camera_position[1], 'pz': camera_position[2],
         'rx': camera_rotation[0], 'ry': camera_rotation[1], 'rz': camera_rotation[2]},
-        '/templates/particles.tmpl')))
+        'templates/particles.tmpl')))
 
     if return_id:
         return model_id
@@ -797,9 +797,9 @@ def plot_dense_array(
         {'model': json.dumps(model), 'model_id': model_id,
         'px': camera_position[0], 'py': camera_position[1], 'pz': camera_position[2],
         'rx': camera_rotation[0], 'ry': camera_rotation[1], 'rz': camera_rotation[2]},
-        '/templates/particles.tmpl')))
+        'templates/particles.tmpl')))
 
-def generate_html(keywords, tmpl_path):
+def generate_html(keywords, tmpl_path, package_name='ecell4.util'):
     """
     Generate static html file from JSON model and its own id.
 
@@ -817,8 +817,10 @@ def generate_html(keywords, tmpl_path):
     """
     from jinja2 import Template
 
-    path = os.path.abspath(os.path.dirname(__file__)) + tmpl_path
-    template = Template(open(path).read())
+    import pkgutil
+    template = Template(pkgutil.get_data(package_name, tmpl_path).decode())
+    # path = os.path.abspath(os.path.dirname(__file__)) + tmpl_path
+    # template = Template(open(path).read())
     html = template.render(**keywords)
     return html
 
@@ -927,7 +929,7 @@ def plot_trajectory_with_elegans(
         {'model': json.dumps(model), 'model_id': model_id,
         'px': camera_position[0], 'py': camera_position[1], 'pz': camera_position[2],
         'rx': camera_rotation[0], 'ry': camera_rotation[1], 'rz': camera_rotation[2]},
-        '/templates/particles.tmpl')))
+        'templates/particles.tmpl')))
 
 def logo(x=1, y=None):
     if not isinstance(x, int):
@@ -985,7 +987,7 @@ def logo(x=1, y=None):
 
     filenames = [
        os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                    '/templates/ecelllogo/logo%02d.png' % (i + 1))
+                    'templates/ecelllogo/logo%02d.png' % (i + 1))
        for i in range(15)]
     base64s = [
         base64.b64encode(open(filename, 'rt').read())
