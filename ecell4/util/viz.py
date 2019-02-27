@@ -1707,7 +1707,7 @@ def __prepare_mplot3d_with_attractive_mpl(
 
     fig = plt.figure(figsize=(figsize * whratio, figsize))
     ax = plt.subplot(111, projection='3d')
-    ax.set_axis_bgcolor('white')
+    ax.set_facecolor('white')
 
     for axis in (ax.xaxis, ax.yaxis, ax.zaxis):
         if wireframe:
