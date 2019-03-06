@@ -233,7 +233,7 @@ class ProgressBarNotebook:
             self.__last = (progress, elapsed)
         return info
 
-    def run(self, duration, obs):
+    def run(self, duration, obs=None):
         """Run the simulation.
 
         Parameters
@@ -241,14 +241,16 @@ class ProgressBarNotebook:
         duration : Real
             a duration for running a simulation.
                 A simulation is expected to be stopped at t() + duration.
-        observers : list of Obeservers, optional
+        obs : list of Obeservers, optional
             observers
 
         """
         from ecell4_base.core import TimeoutObserver
 
         timeout = TimeoutObserver(self.__timeout)
-        if isinstance(obs, collections.Iterable):
+        if obs is None:
+            obs = (timeout, )
+        elif isinstance(obs, collections.Iterable):
             obs = tuple(obs) + (timeout, )
         else:
             obs = (obs, timeout)
