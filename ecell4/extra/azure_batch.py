@@ -88,8 +88,7 @@ def upload_file_to_container(block_blob_client, container_name, file_path):
                                               blob_name,
                                               sas_token=sas_token)
 
-    return batchmodels.ResourceFile(file_path=blob_name,
-                                    blob_source=sas_url)
+    return batchmodels.ResourceFile(http_url=sas_url, file_path=blob_name)
 
 def get_container_sas_token(block_blob_client,
                             container_name, blob_permissions):
@@ -228,7 +227,7 @@ def create_pool(batch_service_client, pool_id,
 
     try:
         batch_service_client.pool.add(new_pool)
-    except batchmodels.batch_error.BatchErrorException as err:
+    except batchmodels.BatchErrorException as err:
         print_batch_exception(err)
         raise
 
@@ -240,11 +239,11 @@ def create_job(batch_service_client, job_id, pool_id):
     :param str job_id: The ID for the job.
     :param str pool_id: The ID for the pool.
     """
-    _log.info('Creating job [{}]...'.format(job_id))
+    print('Creating job [{}]...'.format(job_id))
 
     job = batch.models.JobAddParameter(
-        job_id,
-        batch.models.PoolInformation(pool_id=pool_id))
+        id=job_id,
+        pool_info=batch.models.PoolInformation(pool_id=pool_id))
 
     try:
         batch_service_client.job.add(job)
@@ -290,8 +289,8 @@ def add_tasks(batch_service_client, job_id, loads,
         _log.debug('CMD : "{}"'.format(command[0]))
 
         tasks.append(batch.models.TaskAddParameter(
-                'topNtask{}-{}'.format(i, j),
-                wrap_commands_in_shell('linux', command),
+                id='topNtask{}-{}'.format(i, j),
+                command_line=command,
                 resource_files=[input_file]
                 )
         )
@@ -656,10 +655,10 @@ blob_client.create_blob_from_path(args.storagecontainer,
         # service in addition to Storage
         credentials = batchauth.SharedKeyCredentials(_BATCH_ACCOUNT_NAME,
                                                      _BATCH_ACCOUNT_KEY)
-
+        #print(_BATCH_ACCOUNT_URL)
         batch_client = batch.BatchServiceClient(
             credentials,
-            base_url=_BATCH_ACCOUNT_URL)
+            batch_url=_BATCH_ACCOUNT_URL)
 
         # Create the pool that will contain the compute nodes that will execute the
         # tasks. The resource files we pass in are used for configuring the pool's
@@ -770,7 +769,7 @@ def singlerun(job, task_id=0, job_id=0):
         A + B == C | (0.01, 0.3)
 
     res = ecell4.util.simulation.run_simulation(
-        10.0,
+        1.0,
         y0={'A': job[0], 'B': job[1], 'C': job[2]},
         rndseed=job_id,
         solver='gillespie',
@@ -790,7 +789,7 @@ if __name__ == '__main__':
 
     # jobs = [(n, n, n) for n in range(10, 70, 10)]
     jobs = [(30, 30, 30), (60, 60, 60)]
-    res = run_azure(singlerun, jobs, n=2, path='tmp', config='example.ini')
+    res = run_azure(singlerun, jobs, n=2, path='.', config='example.ini')
     print(res)
 
     import numpy
