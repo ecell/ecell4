@@ -260,7 +260,10 @@ def run_simulation(
     if not isinstance(t, collections.Iterable):
         t = [float(t) * i / 100 for i in range(101)]
 
-    obs = ecell4_base.core.TimingNumberObserver(t, species_list)
+    if species_list is not None:
+        obs = ecell4_base.core.TimingNumberObserver(t, species_list)
+    else:
+        obs = ecell4_base.core.TimingNumberObserver(t)
     sim = f.simulator(w, model)
     # sim = f.simulator(w)
 
@@ -338,6 +341,9 @@ def number_observer(t=None, targets=None):
     elif isinstance(t, numbers.Number):
         return FixedIntervalNumberObserver(t, targets)
     elif hasattr(t, '__iter__'):
-        return TimingNumberObserver(t, targets)
+        if targets is not None:
+            return TimingNumberObserver(t, targets)
+        else:
+            return TimingNumberObserver(t)
     else:
         raise TypeError("An invalid type was given. Either number or iterable is required.")
