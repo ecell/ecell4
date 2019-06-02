@@ -18,6 +18,12 @@ Visiting `http://<hostname>:8888/?token=<token>` in a browser loads the Jupyter 
 
 ## Installation
 
+### Any Linux (almost)
+
 ```
-pip install ecell4
+pip3 install ecell4
 ```
+
+### Windows, Mac
+
+Please refer to [ecell4-base INSTALL.md](https://github.com/ecell/ecell4-base/blob/master/INSTALL.md)
