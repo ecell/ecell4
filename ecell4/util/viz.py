@@ -1046,7 +1046,6 @@ def __prepare_mplot3d_with_matplotlib(
 
     fig = plt.figure(figsize=(figsize, figsize))
     ax = fig.gca(projection='3d')
-    ax.set_aspect('equal')
 
     if wireframe:
         ax.w_xaxis.set_pane_color((0, 0, 0, 0))
