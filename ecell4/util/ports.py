@@ -97,7 +97,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
         for sp in itertools.chain(rr.reactants(), rr.products()):
             species_list.append(sp)
     species_list = list(set(species_list))
-    species_list.sort()
+    species_list.sort(key=lambda x: x.serial())
 
     sid_map = {}
     for cnt, sp in enumerate(species_list):
@@ -176,6 +176,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
             s1.setConstant(False)
             s1.setStoichiometry(coef)
 
+        species_coef_map = {}
         if desc is None:
             for sp in rr.products():
                 if sp not in species_coef_map.keys():
@@ -183,7 +184,6 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
                 else:
                     species_coef_map[sp] += 1
         else:
-            species_coef_map = {}
             for sp, coef in zip(rr.products(), desc.product_coefficients()):
                 if sp not in species_coef_map.keys():
                     species_coef_map[sp] = coef
