@@ -5,7 +5,7 @@ import re
 
 import ecell4_base
 
-from ..extra import unit
+from ecell4.extra import unit
 
 
 def replace_parseobj(expr, substitutes=None):
@@ -14,7 +14,7 @@ def replace_parseobj(expr, substitutes=None):
     import ecell4.util.decorator_base
     obj = ecell4.util.decorator_base.just_parse().eval(expr)
 
-    from ecell4.util.decorator import dispatch, SpeciesParsingVisitor
+    from ecell4.util.model_parser import dispatch, SpeciesParsingVisitor
     visitor = SpeciesParsingVisitor()
     newexpr = str(dispatch(copy.deepcopy(obj), visitor))
     keys = visitor.keys
@@ -97,7 +97,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
         for sp in itertools.chain(rr.reactants(), rr.products()):
             species_list.append(sp)
     species_list = list(set(species_list))
-    species_list.sort()
+    species_list.sort(key=lambda x: x.serial())
 
     sid_map = {}
     for cnt, sp in enumerate(species_list):
@@ -176,6 +176,7 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
             s1.setConstant(False)
             s1.setStoichiometry(coef)
 
+        species_coef_map = {}
         if desc is None:
             for sp in rr.products():
                 if sp not in species_coef_map.keys():
@@ -183,7 +184,6 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
                 else:
                     species_coef_map[sp] += 1
         else:
-            species_coef_map = {}
             for sp, coef in zip(rr.products(), desc.product_coefficients()):
                 if sp not in species_coef_map.keys():
                     species_coef_map[sp] = coef
@@ -266,7 +266,7 @@ def import_sbml(document):
         A size of the simulation volume.
 
     """
-    from ecell4.util.decorator import generate_ratelaw
+    from ecell4.util.model_parser import generate_ratelaw
 
     m = document.getModel()
 
@@ -304,7 +304,6 @@ def import_sbml(document):
 
     for r1 in m.getListOfReactions():
         rid = r1.getId()
-        print(rid)
 
         is_massaction = (rid in kmap.keys())
         if is_massaction:
