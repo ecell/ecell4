@@ -304,7 +304,6 @@ def import_sbml(document):
 
     for r1 in m.getListOfReactions():
         rid = r1.getId()
-        print(rid)
 
         is_massaction = (rid in kmap.keys())
         if is_massaction:
