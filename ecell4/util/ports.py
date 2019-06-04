@@ -14,7 +14,7 @@ def replace_parseobj(expr, substitutes=None):
     import ecell4.util.decorator_base
     obj = ecell4.util.decorator_base.just_parse().eval(expr)
 
-    from ecell4.util.decorator import dispatch, SpeciesParsingVisitor
+    from ecell4.util.model_parser import dispatch, SpeciesParsingVisitor
     visitor = SpeciesParsingVisitor()
     newexpr = str(dispatch(copy.deepcopy(obj), visitor))
     keys = visitor.keys
@@ -266,7 +266,7 @@ def import_sbml(document):
         A size of the simulation volume.
 
     """
-    from ecell4.util.decorator import generate_ratelaw
+    from ecell4.util.model_parser import generate_ratelaw
 
     m = document.getModel()
 
