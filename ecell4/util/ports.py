@@ -5,7 +5,7 @@ import re
 
 import ecell4_base
 
-from ..extra import unit
+from ecell4.extra import unit
 
 
 def replace_parseobj(expr, substitutes=None):
