@@ -79,17 +79,6 @@ def get_application_registry():
     """Just return `pint._APP_REGISTRY`."""
     return pint._APP_REGISTRY
 
-def get_dimension(model, sp):
-    sp = model.apply_species_attributes(sp)
-    if sp.has_attribute('dimension'):
-        val = sp.get_attribute('dimension')
-        assert isinstance(val, Quantity_Integer)
-        return int(val.magnitude)
-    elif sp.has_attribute('location'):
-        loc = Species(sp.get_attribute('location'))
-        return get_dimension(model, loc)
-    return 3  # default
-
 def is_structure(model, sp):
     sp = model.apply_species_attributes(sp)
     if not sp.has_attribute('structure'):
@@ -114,7 +103,18 @@ def check_units(model):
         A model to be checked.
 
     """
-    from ecell4_base.core import Quantity_Integer, Quantity_Real
+    from ecell4_base.core import Species, Quantity_Integer, Quantity_Real
+
+    def get_dimension(model, sp):
+        sp = model.apply_species_attributes(sp)
+        if sp.has_attribute('dimension'):
+            val = sp.get_attribute('dimension')
+            assert isinstance(val, Quantity_Integer)
+            return int(val.magnitude)
+        elif sp.has_attribute('location'):
+            loc = Species(sp.get_attribute('location'))
+            return get_dimension(model, loc)
+        return 3  # default
 
     dimensions = {
         'D': '[length]**2/[time]',
