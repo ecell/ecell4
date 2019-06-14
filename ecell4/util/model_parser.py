@@ -44,7 +44,10 @@ def as_quantity(value):
             raise TypeError(
                 "Magnitude must be float. '{}' was given [{}]".format(
                     type(value.magnitude).__name__, value.magnitude))
-        value = ecell4_base.core.Quantity(value.magnitude, str(value.units))
+        if isinstance(value.magnitude, numbers.Integral):
+            value = ecell4_base.core.Quantity_Integer(value.magnitude, str(value.units))
+        else:
+            value = ecell4_base.core.Quantity_Real(value.magnitude, str(value.units))
     return value
 
 def generate_species(obj):
@@ -117,7 +120,9 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
         elif callable(k):
             desc = ecell4_base.core.ReactionRuleDescriptorPyfunc(k, "")
         else:
-            if not isinstance(k, (numbers.Real, ecell4_base.core.Quantity)):
+            if isinstance(k, ecell4_base.core.Quantity_Integer):
+                k = ecell4_base.core.Quantity_Real(k.magnitude, k.units)
+            elif not isinstance(k, (numbers.Real, ecell4_base.core.Quantity_Real)):
                 raise TypeError(
                     "A kinetic rate must be float or Quantity."
                     "'{}' was given [{}].".format(type(k).__name__, k))
@@ -129,7 +134,9 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
         desc.set_product_coefficients(product_coefficients)
 
         rr.set_descriptor(desc)
-    elif isinstance(k, (numbers.Real, ecell4_base.core.Quantity)):
+    elif isinstance(k, (numbers.Real, ecell4_base.core.Quantity_Real, ecell4_base.core.Quantity_Integer)):
+        if isinstance(k, ecell4_base.core.Quantity_Integer):
+            k = ecell4_base.core.Quantity_Real(k.magnitude, k.units)
         rr.set_k(k)
     # elif unit.HAS_PINT and isinstance(k, unit._Quantity):  # Kinetic rate given as a quantity
     #     if unit.STRICT:
@@ -231,7 +238,7 @@ class SpeciesParsingVisitor(Visitor):
         return obj
 
     def visit_default(self, obj):
-        if (not isinstance(obj, (numbers.Real, ecell4_base.core.Quantity))
+        if (not isinstance(obj, (numbers.Real, ecell4_base.core.Quantity_Real, ecell4_base.core.Quantity_Integer))
                 and not (str(obj) in RATELAW_RESERVED_CONSTANTS and RATELAW_RESERVED_CONSTANTS[str(obj)] is None)):
             raise TypeError("An invalid type '{}' was given [{}].".format(type(obj).__name__, obj))
         return Visitor.visit_default(self, obj)

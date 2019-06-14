@@ -62,7 +62,7 @@ class SpeciesAttributesCallback(Callback):
                         " '{}' was given [{}].".format(type(key).__name__, key))
 
                 value = as_quantity(value)
-                if not isinstance(value, (numbers.Real, str, bool, ecell4_base.core.Quantity)):
+                if not isinstance(value, (numbers.Real, str, bool, ecell4_base.core.Quantity_Integer, ecell4_base.core.Quantity_Real)):
                     raise TypeError(
                         "Attribute value must be int, float, string, boolean or Quantity."
                         " '{}' was given [{}].".format(type(value).__name__, value))
