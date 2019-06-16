@@ -12,7 +12,7 @@ from pint.unit import _Unit
 
 __all__ = [
     'getUnitRegistry', '_Quantity', '_Unit', 'wrap_quantity',
-    'get_application_registry', 'check_units']
+    'get_application_registry']
 
 def wrapped_binary_operator(op1, op2):
     def wrapped(self, other):
@@ -78,87 +78,6 @@ def getUnitRegistry(length="meter", time="second", substance="item", volume=None
 def get_application_registry():
     """Just return `pint._APP_REGISTRY`."""
     return pint._APP_REGISTRY
-
-def is_structure(model, sp):
-    sp = model.apply_species_attributes(sp)
-    if not sp.has_attribute('structure'):
-        return False
-    val = sp.get_attribute('structure')
-    assert isinstance(val, bool)
-    return val
-
-def assert_units(q, dim, key=''):
-    q = q if isinstance(q, _Quantity) else getUnitRegistry().Quantity(q.magnitude, q.units)
-    if not q.check(dim):
-        raise RuntimeError('"{}" has a wrong dimensionality "{:s}". "{:s}" must be given.'.format(
-            key, q.dimensionality, getUnitRegistry().get_dimensionality(dim)))
-
-def check_units(model):
-    """
-    Check units in the given model.
-
-    Parameters
-    ----------
-    model : ecell4.core.Model
-        A model to be checked.
-
-    """
-    from ecell4_base.core import Species, Quantity_Integer, Quantity_Real
-
-    def get_dimension(model, sp):
-        sp = model.apply_species_attributes(sp)
-        if sp.has_attribute('dimension'):
-            val = sp.get_attribute('dimension')
-            assert isinstance(val, Quantity_Integer)
-            return int(val.magnitude)
-        elif sp.has_attribute('location'):
-            loc = Species(sp.get_attribute('location'))
-            return get_dimension(model, loc)
-        return 3  # default
-
-    dimensions = {
-        'D': '[length]**2/[time]',
-        'radius': '[length]',
-        'dimension': '',  # means dimensionality of 'dimensionless'
-    }
-
-    for sp in model.species_attributes():
-        for key, val in sp.list_attributes():
-            if not isinstance(val, (Quantity_Integer, Quantity_Real)):
-                continue
-            elif val.units == '':
-                continue
-            elif key not in dimensions:
-                continue
-            assert_units(val, dimensions[key], '{} ({})'.format(key, sp.serial()))
-
-    for rr in model.reaction_rules():
-        if rr.has_descriptor():
-            warnings.warn('ReactionRuleDescriptor is not supported yet. "{}" was ignored.'.format(rr.as_string()))
-            continue
-
-        val = rr.get_k()
-        if val.units == '':
-            continue
-
-        reactants = rr.reactants()
-        if len(reactants) == 0:
-            products = rr.products()
-            dim = set((get_dimension(model, sp) for sp in products))
-            if len(dim) != 1:
-                raise RuntimeError('All products must have the same dimension: "{}".'.format(rr.as_string()))
-            basedim = int(dim[0])
-            assert basedim in (1, 2, 3)
-            assert_units(val, '[substance]/[time]/[length]**{:d}'.format(basedim), rr.as_string())
-        else:
-            dim = [get_dimension(model, sp) for sp in reactants]
-            basedim = max(dim)
-            structure = [is_structure(model, sp) for sp in reactants]
-            units = '1/[time]/([substance]/[length]**{:d})**{:d}'.format(basedim, len(dim) - 1)
-            if any(structure):
-                tot = sum(dim_ for structure_, dim_ in zip(structure, dim) if structure_)
-                units += '/([length]**{:d}/[substance]**{:d})'.format(tot, sum(structure))
-            assert_units(val, units, rr.as_string())
 
 
 if __name__ == '__main__':
