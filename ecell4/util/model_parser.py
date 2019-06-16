@@ -182,7 +182,7 @@ class Visitor(object):
     def visit_default(self, obj):
         return obj
 
-class PreprocessVisitor(Visitor):
+class PreprocessVisitor1(Visitor):
 
     def visit_func(self, obj, *args):
         subobj = obj._elems[0]
@@ -196,7 +196,30 @@ class PreprocessVisitor(Visitor):
 
     def visit_default(self, obj):
         if unit.HAS_PINT and isinstance(obj, unit._Quantity):
-            obj = as_quantity(obj).magnitude
+            obj = as_quantity(obj)
+        if isinstance(obj, ecell4_base.core.Quantity_Integer):
+            obj = "Quantity_Integer({}, '{}')".format(obj.magnitude, obj.units)
+        elif isinstance(obj, ecell4_base.core.Quantity_Real):
+            obj = "Quantity_Real({}, '{}')".format(obj.magnitude, obj.units)
+        return Visitor.visit_default(self, obj)
+
+class PreprocessVisitor2(Visitor):
+
+    def visit_func(self, obj, *args):
+        subobj = obj._elems[0]
+        subobj.args = tuple(args)
+        return obj
+
+    def visit_expression(self, obj, *args):
+        assert len(obj._elems) == len(args)
+        obj._elems = list(args)
+        return obj
+
+    def visit_default(self, obj):
+        if unit.HAS_PINT and isinstance(obj, unit._Quantity):
+            obj = as_quantity(obj)
+        if isinstance(obj, (ecell4_base.core.Quantity_Integer, ecell4_base.core.Quantity_Real)):
+            obj = obj.magnitude
         return Visitor.visit_default(self, obj)
 
 class SpeciesParsingVisitor(Visitor):
@@ -337,8 +360,10 @@ def dispatch(obj, visitor):
         return visitor.visit_default(obj)
 
 def generate_ratelaw(obj, rr, implicit=False):
-    obj = dispatch(copy.deepcopy(obj), PreprocessVisitor())
-    label = str(obj)
+    label = str(dispatch(copy.deepcopy(obj), PreprocessVisitor1()))
+
+    obj = dispatch(copy.deepcopy(obj), PreprocessVisitor2())
+    # label = str(obj)
     visitor = SpeciesParsingVisitor()
     exp = str(dispatch(obj, visitor))
 
