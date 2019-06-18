@@ -162,10 +162,10 @@ class ParseElem:
                 attrs += ["%s" % str(v) for v in self.args]
             if self.kwargs is not None:
                 attrs += ["%s=%s" % (k, v) for k, v in self.kwargs.items()]
-            label += "(%s)" % (",".join(attrs))
+            label += "(%s)" % (", ".join(attrs))
 
         if self.modification is not None:
-            label += "^%s" % str(self.modification)
+            label += " ^ %s" % str(self.modification)
         if self.key is not None:
             label += "[%s]" % str(self.key)
         return label
@@ -471,7 +471,7 @@ class AddExp(ExpBase):
             self._elems.append(obj)
 
     def __str__(self):
-        return "(%s)" % ("+".join([str(obj) for obj in self._elems]))
+        return "(%s)" % (" + ".join([str(obj) for obj in self._elems]))
 
     def __deepcopy__(self, memo):
         retval = AddExp(self._root, None, None)
@@ -499,7 +499,7 @@ class SubExp(ExpBase):
             self._elems.append(obj)
 
     def __str__(self):
-        return "(%s)" % ("-".join([str(obj) for obj in self._elems]))
+        return "(%s)" % (" - ".join([str(obj) for obj in self._elems]))
 
     def __deepcopy__(self, memo):
         retval = SubExp(self._root, None, None)
@@ -527,7 +527,7 @@ class DivExp(ExpBase):
             self._elems.append(obj)
 
     def __str__(self):
-        return "(%s)" % ("/".join([str(obj) for obj in self._elems]))
+        return "(%s)" % (" / ".join([str(obj) for obj in self._elems]))
 
     def __deepcopy__(self, memo):
         retval = DivExp(self._root, None, None)
@@ -555,7 +555,7 @@ class MulExp(ExpBase):
             self._elems.append(obj)
 
     def __str__(self):
-        return "(%s)" % ("*".join([str(obj) for obj in self._elems]))
+        return "(%s)" % (" * ".join([str(obj) for obj in self._elems]))
 
     def __deepcopy__(self, memo):
         retval = MulExp(self._root, None, None)
@@ -603,7 +603,7 @@ class PowExp(ExpBase):
         return copy.copy(self._elems)
 
     def __str__(self):
-        return "pow(%s,%s)" % (self._elems[0], self._elems[1])
+        return "pow(%s, %s)" % (self._elems[0], self._elems[1])
         # return "(%s**%s)" % (self._elems[0], self._elems[1])
 
     def __deepcopy__(self, memo):
@@ -632,7 +632,7 @@ class OrExp(ExpBase):
             self._elems.append(obj)
 
     def __str__(self):
-        return "(%s)" % ("|".join([str(obj) for obj in self._elems]))
+        return "(%s)" % (" | ".join([str(obj) for obj in self._elems]))
 
     def __deepcopy__(self, memo):
         retval = OrExp(self._root, None, None)
@@ -660,7 +660,7 @@ class AndExp(ExpBase):
             self._elems.append(obj)
 
     def __str__(self):
-        return "(%s)" % ("&".join([str(obj) for obj in self._elems]))
+        return "(%s)" % (" & ".join([str(obj) for obj in self._elems]))
 
     def __deepcopy__(self, memo):
         retval = AndExp(self._root, None, None)
@@ -684,7 +684,7 @@ class CmpExp(ExpBase):
         return self.__rhs
 
     def __str__(self):
-        return "%s%s%s" % (self.__lhs, self.__opr, self.__rhs)
+        return "%s %s %s" % (self.__lhs, self.__opr, self.__rhs)
 
 class GtExp(CmpExp):
 

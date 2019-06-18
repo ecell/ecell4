@@ -1,5 +1,6 @@
 from logging import getLogger
 _log = getLogger(__name__)
+import warnings
 
 from ..util.parseobj import AnyCallable, ExpBase
 
@@ -8,8 +9,9 @@ from pint.quantity import _Quantity
 from pint.unit import _Unit
 # from pint.errors import UndefinedUnitError
 
+
 __all__ = [
-    'getUnitRegistry', '_Quantity', '_Unit', 'check_dimensionality', 'wrap_quantity',
+    'getUnitRegistry', '_Quantity', '_Unit', 'wrap_quantity',
     'get_application_registry']
 
 def wrapped_binary_operator(op1, op2):
@@ -52,9 +54,10 @@ def getUnitRegistry(length="meter", time="second", substance="item", volume=None
     """
     ureg = pint.UnitRegistry()
     ureg.define('item = mole / (avogadro_number * 1 mole)')
+    assert ureg.Quantity(1, 'item').check('[substance]')
 
     try:
-        pint.molar
+        ureg.molar
     # except UndefinedUnitError:
     except AttributeError:
         # https://github.com/hgrecco/pint/blob/master/pint/default_en.txt#L75-L77
@@ -72,21 +75,6 @@ def getUnitRegistry(length="meter", time="second", substance="item", volume=None
 
     pint.set_application_registry(ureg)  # for pickling
     return ureg
-
-def check_dimensionality(q, dim):
-    """Return whether the quantity has the dimensionality given.
-
-    Parameters
-    ----------
-    q : pint._Quantity
-    dim : pint.util.UnitsContainer
-
-    Returns
-    -------
-    value : bool
-
-    """
-    return (q._REGISTRY.get_dimensionality(dim) == q.dimensionality)
 
 def get_application_registry():
     """Just return `pint._APP_REGISTRY`."""
