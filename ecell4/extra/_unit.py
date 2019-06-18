@@ -54,9 +54,10 @@ def getUnitRegistry(length="meter", time="second", substance="item", volume=None
     """
     ureg = pint.UnitRegistry()
     ureg.define('item = mole / (avogadro_number * 1 mole)')
+    assert ureg.Quantity(1, 'item').check('[substance]')
 
     try:
-        pint.molar
+        ureg.molar
     # except UndefinedUnitError:
     except AttributeError:
         # https://github.com/hgrecco/pint/blob/master/pint/default_en.txt#L75-L77
