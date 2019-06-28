@@ -91,11 +91,11 @@ def generate_reaction_rule_options(elements):
 
     opts = {}
     for elem in elements:
-        if isinstance(elem, ecell4_base.core.ReactionRulePolicy):
+        if isinstance(elem, ecell4_base.core.ReactionRule.ReactionRulePolicy):
             if 'policy' not in opts.keys():
                 opts['policy'] = elem
             else:
-                opts['policy'] = ecell4_base.core.ReactionRulePolicy(opts['policy'].get() | elem.get())
+                opts['policy'] = opts['policy'] | elem
         else:
             if 'k' in opts.keys():
                 raise RuntimeError(
@@ -154,11 +154,11 @@ def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit
             " '{}' was given [{}].".format(type(k).__name__, k))
 
     if policy is not None:
-        if not isinstance(policy, ecell4_base.core.ReactionRulePolicy):
+        if not isinstance(policy, ecell4_base.core.ReactionRule.ReactionRulePolicy):
             raise TypeError(
-                "policy must be ReactionRulePolicy."
+                "policy must be ReactionRule.ReactionRulePolicy."
                 " '{}' was given [{}].".format(type(policy).__name__, policy))
-        rr.set_policy(policy.get())
+        rr.set_policy(policy)
 
     return rr
 
