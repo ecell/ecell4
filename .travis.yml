@@ -13,6 +13,11 @@ script:
   - conda install --use-local -c ecell ecell4
 
 deploy:
+  - provider: script
+    script: anaconda -t $CONDA_UPLOAD_TOKEN upload /*/travis/miniconda/conda-bld/*/*.tar.bz2
+    on:
+      tags: true
+    skip_cleanup: true
   - provider: pypi
     user: "kozo2"
     password:
@@ -20,8 +25,3 @@ deploy:
     skip_existing: true
     on:
       tags: true
-  - provider: script
-    script: anaconda -t $CONDA_UPLOAD_TOKEN upload /*/travis/miniconda/conda-bld/*/*.tar.bz2
-    on:
-      tags: true
-    skip_cleanup: true
