@@ -1,6 +1,6 @@
 package:
   name: ecell4
-  version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
+  version: {{ load_setuppy_data().version }}
 
 source:
   git_url: .
