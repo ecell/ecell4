@@ -1,6 +1,6 @@
 package:
   name: ecell4
-  version: {{ load_setuppy_data().version }}
+  version: {{ load_setup_py_data().version }}
 
 source:
   git_url: .
