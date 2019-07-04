@@ -1,0 +1,36 @@
+package:
+  name: ecell4
+  version: {{ environ.get('GIT_DESCRIBE_TAG', 'dev') }}
+
+source:
+  git_url: .
+
+build:
+  noarch: python
+  number: 0
+  script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vv "
+
+requirements:
+  host:
+    - ecell4_base
+    - matplotlib
+    - pip
+    - python
+  run:
+    - ecell4_base
+    - matplotlib
+    - python
+
+test:
+  imports:
+    - ecell4
+    - ecell4.datasource
+    - ecell4.extra
+    - ecell4.util
+
+about:
+  home: "https://github.com/ecell/ecell4"
+  license: "the GNU General Public v2"
+  license_family: "GPL2"
+  license_file: LICENSE
+  summary: "A software platform for modeling, simulation and analysis of complex, heterogeneous and multi-scale systems like the cell. E-Cell has multi-algorithm, multi-timescale and multi-spatial-representation as its central feature."

@@ -1,17 +1,27 @@
 language: python
-python:
-  - "3.5"
-  - "3.6"
-  - "3.7-dev"
-install:
-  - pip install ./
+
+before_install:
+  - wget -O miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda install -q conda-build anaconda-client
+
 script:
-  - ls -alh
+  - conda build -c ecell .
+  - conda install --use-local -c ecell ecell4
+
 deploy:
-  provider: pypi
-  user: "kozo2"
-  password:
-    secure: W+6uRn8jsfDtHjVDyDgFTRCUMDVDzYqfRqgWXIRit0t6MsDHSi3e5qE5fwG0HjYYl5lw5PRxO7AvHPKGXob5um2AOMb2yvPf211wpEjtzpbe1WTq0A++D53IEL6u5X2LcOiV2zB+s7VKzPa7yfvXh9FNdpVsh4lK7g74tricWMGJjN9q2U9kJHEOMMG3aUVAIX1ME69/zeuDn98xVj4M3dJ0JC4KIEhqo/zC3ovq4xLBKvuBg+pHi2BXffR9HBKAxgrVScyZYMuL7q/UQZRbY2jb0zb+vvL/Q7MAYTPwrBhCj1QDOGH4FUGkeQa05tZaCf2S44GG00KJwjf5MSnI0eDTMJ3OKTUgSGw3hKKgrnscBXbJFYg05CmiswpUlNAMiC76G42Hu5ljas6NMjrs64xRzXuQuGyEyEkXK54o8PLxwyL9s7/JzZEDUq5sXHeBnq4QIxU5yNk8Vu8/5M2+axdFdP8hcz2DQ5+UZiOevlHA9XtTZ3iii0h7hYfL07cXar0vuSbwM9xXmDemU7KYG4uN8g1SUGMrkW+Sbo8WXH6M6Vh4VMB2CdxCmaoZ49K4owEmQCsQh7Xu+WPTF+4WGKPl534JzlTiWg284Rw9uYlD5/LkyuestVtQ3dbc0ULVU992HEiDptHHqvQdWvGmXc0uY+MPuNd0RImgsFgv2b0=
-  skip_existing: true
-  on:
-    tags: true
+  - provider: pypi
+    user: "kozo2"
+    password:
+      secure: W+6uRn8jsfDtHjVDyDgFTRCUMDVDzYqfRqgWXIRit0t6MsDHSi3e5qE5fwG0HjYYl5lw5PRxO7AvHPKGXob5um2AOMb2yvPf211wpEjtzpbe1WTq0A++D53IEL6u5X2LcOiV2zB+s7VKzPa7yfvXh9FNdpVsh4lK7g74tricWMGJjN9q2U9kJHEOMMG3aUVAIX1ME69/zeuDn98xVj4M3dJ0JC4KIEhqo/zC3ovq4xLBKvuBg+pHi2BXffR9HBKAxgrVScyZYMuL7q/UQZRbY2jb0zb+vvL/Q7MAYTPwrBhCj1QDOGH4FUGkeQa05tZaCf2S44GG00KJwjf5MSnI0eDTMJ3OKTUgSGw3hKKgrnscBXbJFYg05CmiswpUlNAMiC76G42Hu5ljas6NMjrs64xRzXuQuGyEyEkXK54o8PLxwyL9s7/JzZEDUq5sXHeBnq4QIxU5yNk8Vu8/5M2+axdFdP8hcz2DQ5+UZiOevlHA9XtTZ3iii0h7hYfL07cXar0vuSbwM9xXmDemU7KYG4uN8g1SUGMrkW+Sbo8WXH6M6Vh4VMB2CdxCmaoZ49K4owEmQCsQh7Xu+WPTF+4WGKPl534JzlTiWg284Rw9uYlD5/LkyuestVtQ3dbc0ULVU992HEiDptHHqvQdWvGmXc0uY+MPuNd0RImgsFgv2b0=
+    skip_existing: true
+    on:
+      tags: true
+  - provider: script
+    script: anaconda -t $CONDA_UPLOAD_TOKEN upload /*/travis/miniconda/conda-bld/*/*.tar.bz2
+    on:
+      tags: true
+    skip_cleanup: true
