@@ -9,7 +9,7 @@ before_install:
   - conda install -q conda-build anaconda-client
 
 script:
-  - conda build -c ecell conda.recipe
+  - conda build -c ecell .
   - conda install --use-local ecell4
 
 deploy:
