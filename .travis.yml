@@ -10,7 +10,7 @@ before_install:
 
 script:
   - conda build -c ecell .
-  - conda install --use-local ecell4
+  - conda install --use-local -c ecell ecell4
 
 deploy:
   - provider: pypi
