@@ -65,11 +65,6 @@ viz.plot_trajectory(obs, interactive=False)
 
 ![png](./samples/hairball.png)
 
-Tutorials, Examples, and API (Static Site)
-------------------------------------------
-
-https://ecell4.readthedocs.io/en/latest/
-
 Installation
 ------------
 
@@ -96,3 +91,8 @@ conda install -c ecell ecell4
 ```
 python3 -m pip install ecell4
 ```
+
+Tutorials, Examples, and API (Static Site)
+------------------------------------------
+
+https://ecell4.readthedocs.io/en/latest/
