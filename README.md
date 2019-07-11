@@ -66,7 +66,8 @@ viz.plot_trajectory(obs, interactive=False)
 ![png](./samples/hairball.png)
 
 Tutorials, Examples, and API (Static Site)
-==========================================
+------------------------------------------
+
 https://ecell4.readthedocs.io/en/latest/
 
 Installation
@@ -90,7 +91,7 @@ conda config --add channels conda-forge
 conda install -c ecell ecell4
 ```
 
-### Google Colab and Linux environment where you can NOT use conda
+### Linux environment where you can NOT use conda
 
 ```
 python3 -m pip install ecell4
