@@ -68,6 +68,10 @@ viz.plot_trajectory(obs, interactive=False)
 Installation
 ------------
 
+E-Cell4 does not support Python2.
+
+E-Cell4 does not support `pip install` on Windows and Mac.
+
 ### Windows
 
 Install Miniconda with Python 3.7 for **64-bit** (from https://docs.conda.io/en/latest/miniconda.html)
