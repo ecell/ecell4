@@ -41,7 +41,7 @@ def load_world(filename):
         return ecell4_base.spatiocyte.World(filename)
     elif vinfo == "":
         raise RuntimeError("No version information was found in [{0}]".format(filename))
-    raise RuntimeError("Unkown version information [{0}]".format(vinfo))
+    raise RuntimeError("Unknown version information [{0}]".format(vinfo))
 
 def get_factory(solver, *args):
     import ecell4_base
