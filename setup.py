@@ -11,7 +11,7 @@ LONG_DESCRIPTION = open(os.path.join(".", "README.md")).read()
 
 setup(
     name='ecell4',
-    version='1.1.1',
+    version='1.1.2',
     packages=['ecell4', 'ecell4.util', 'ecell4.extra', 'ecell4.datasource', 'ecell4.mca'],
     package_data = {"ecell4.util": [
         "templates/init_ipynb.js", "templates/init_cyjs.js", "templates/template.html",
