@@ -151,9 +151,11 @@ def plot_number_observer_with_matplotlib(*args, **kwargs):
     import numpy
     import collections
 
-    special_keys = ("xlim", "ylim", "xlabel", "ylabel", "legend", "x", "y", "filename")
+    special_keys = ("xlim", "ylim", "xlabel", "ylabel", "legend", "x", "y", "filename", "step")
     plot_opts = {key: value for key, value in kwargs.items()
                  if key not in special_keys}
+
+    step = kwargs.get('step', None)
 
     if 'axes.prop_cycle' in plt.rcParams.keys():
         color_cycle = [prop['color'] for prop in plt.rcParams['axes.prop_cycle']]
@@ -231,10 +233,16 @@ def plot_number_observer_with_matplotlib(*args, **kwargs):
             opts["color"] = color_map[label]
 
             if err is None:
-                if fmt is None:
-                    ax.plot(data[xidx], data[idx + 1], **opts)
+                if step is None:
+                    if fmt is None:
+                        ax.plot(data[xidx], data[idx + 1], **opts)
+                    else:
+                        ax.plot(data[xidx], data[idx + 1], fmt, **opts)
                 else:
-                    ax.plot(data[xidx], data[idx + 1], fmt, **opts)
+                    if fmt is None:
+                        ax.step(data[xidx], data[idx + 1], where=step, **opts)
+                    else:
+                        ax.step(data[xidx], data[idx + 1], fmt, where=step, **opts)
             else:
                 if fmt is None:
                     ax.errorbar(data[xidx], data[idx + 1],
