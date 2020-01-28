@@ -7,8 +7,25 @@ from . import viz
 from .decorator import get_model
 from .simulation import get_factory, get_shape, number_observer
 
+from ..extra import unit
+
 
 def get_value(obj, type_and_dim=None):
+    if unit.HAS_PINT and isinstance(obj, unit._Quantity):
+        for typeinfo, dim in type_and_dim:
+            if isinstance(obj.magnitude, typeinfo) and obj.check(dim):
+                return obj.to_base_units().magnitude
+        else:
+            raise TypeError('The given value [{}] has wrong type or dimension.'.format(repr(obj)))
+    elif isinstance(obj, (ecell4_base.core.Quantity_Real, ecell4_base.core.Quantity_Integer)):
+        return get_value(obj.magnitude, type_and_dim)
+
+    if type_and_dim is not None:
+        for typeinfo, dim in type_and_dim:
+            if isinstance(obj, typeinfo):
+                break
+        else:
+            raise TypeError('The given value [{}] has wrong type or dimension.'.format(repr(obj)))
     return obj
 
 class Result(object):
@@ -31,6 +48,7 @@ class Result(object):
         return [sp.serial() for sp in self.observer.targets()]
 
     def as_array(self):
+        """Require numpy"""
         import numpy
         return numpy.array(self.observer.data())
 
@@ -38,6 +56,7 @@ class Result(object):
         return self.as_dataframe()
 
     def as_dataframe(self):
+        """Require pandas"""
         import pandas
         return pandas.DataFrame(data=self.data(), columns=['t'] + self.species_list())
 
@@ -61,9 +80,14 @@ class Session(object):
 
         """
         self.model = model or get_model()
-        self.y0 = y0.copy() if y0 is not None else {}
+
+        self.y0 = {}
+        if y0 is not None:
+            for key, value in y0.items():
+                self.y0[key] = get_value(value, ((numbers.Real, '[substance]'), ))
+
         self.structures = structures.copy() if structures is not None else {}
-        self.volume = copy.copy(volume)
+        self.volume = get_value(volume, ((numbers.Real, '[volume]'), (ecell4_base.core.Real3, '[length]')))
 
     def run(self, t, solver='ode', rndseed=None, ndiv=None, species_list=None, observers=()):
         """Run a simulation with the given model and return the result
@@ -77,7 +101,6 @@ class Session(object):
             'bd' and 'egfrd'. Default is 'ode'.
             When tuple is given, the first value must be str as explained above.
             All the rest is used as arguments for the corresponding factory class.
-            Keyword 's' is a shortcut for specifying 'solver'.
         rndseed : int, optional
             A random seed for a simulation.
         ndiv : int, optional
@@ -107,12 +130,7 @@ class Session(object):
         if rndseed is not None:
             f = f.rng(ecell4_base.core.GSLRandomNumberGenerator(rndseed))
 
-        volume = get_value(self.volume, ((numbers.Real, '[volume]'), (ecell4_base.core.Real3, '[length]')))
-        w = f.world(volume)
-
-        y0 = {}
-        for key, value in self.y0.items():
-            y0[key] = get_value(value, ((numbers.Real, '[substance]'), ))
+        w = f.world(self.volume)
 
         if not isinstance(w, ecell4_base.ode.ODEWorld):
             w.bind_to(self.model)
@@ -126,12 +144,11 @@ class Session(object):
                 w.add_structure(ecell4_base.core.Species(name), shape)  # shape is a Shape
 
         if isinstance(w, ecell4_base.ode.ODEWorld):
-            for serial, n in y0.items():
+            for serial, n in self.y0.items():
                 w.set_value(ecell4_base.core.Species(serial), n)
         else:
-            for serial, n in y0.items():
+            for serial, n in self.y0.items():
                 w.add_molecules(ecell4_base.core.Species(serial), n)
-
 
         if isinstance(w, ecell4_base.ode.ODEWorld):
             ndiv = ndiv or 100
