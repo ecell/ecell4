@@ -21,6 +21,22 @@ REACTION_RULES = []
 ENABLE_RATELAW = True
 ENABLE_IMPLICIT_DECLARATION = True
 
+class ProceedKeyword:
+    __singleton = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls.__singleton == None:
+            cls.__singleton = super(ProceedKeyword, cls).__new__(cls)
+        return cls.__singleton
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        return self
+
+PROCEED_KEYWORD = ProceedKeyword()
+
 class SpeciesAttributesCallback(Callback):
 
     def __init__(self):
@@ -36,7 +52,16 @@ class SpeciesAttributesCallback(Callback):
         SPECIES_ATTRIBUTES.extend(self.bitwise_operations)
 
     def notify_bitwise_operations(self, obj):
-        self.bitwise_operations.extend(self.generate(obj))
+        if isinstance(obj, parseobj.OrExp) and obj._elements()[-1] is PROCEED_KEYWORD:
+            elems = obj._elements()[: -1]
+            if len(elems) < 2 or not isinstance(elems[-1], dict):
+                raise RuntimeError("A keyword 'proceed' must be placed just after a dict.")
+            n = len(elems) - 1
+            assert len(self.bitwise_operations) >= n
+            self.bitwise_operations[-n: ] = [
+                    (sp, True) for sp, _ in self.bitwise_operations[-n: ]]
+        else:
+            self.bitwise_operations.extend(self.generate(obj))
 
     @staticmethod
     def generate(obj):
@@ -67,7 +92,7 @@ class SpeciesAttributesCallback(Callback):
                         "Attribute value must be int, float, string, boolean or Quantity."
                         " '{}' was given [{}].".format(type(value).__name__, value))
                 sp.set_attribute(key, value)
-            species_list.append(sp)
+            species_list.append((sp, False))
         return species_list
 
     def notify_comparisons(self, obj):
@@ -174,8 +199,8 @@ def get_model(is_netfree=False, without_reset=False, seeds=None, effective=False
         else:
             m = ecell4_base.core.NetworkModel()
 
-        for sp in SPECIES_ATTRIBUTES:
-            m.add_species_attribute(sp)
+        for sp, proceed in SPECIES_ATTRIBUTES:
+            m.add_species_attribute(sp, proceed)
         for rr in REACTION_RULES:
             m.add_reaction_rule(rr)
 

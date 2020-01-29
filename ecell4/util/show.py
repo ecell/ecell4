@@ -20,9 +20,12 @@ def _as_string(val):
         return repr(val)
     return str(val)
 
-def _show_species(sp, f=sys.stdout):
+def _show_species(sp, proceed=False, f=sys.stdout):
     attributes = ', '.join("'{:s}': {:s}".format(key, _as_string(val)) for key, val in sp.list_attributes())
-    f.write("{:s} | {{{:s}}}\n".format(sp.serial(), attributes))
+    if proceed:
+        f.write("{:s} | {{{:s}}} | proceed\n".format(sp.serial(), attributes))
+    else:
+        f.write("{:s} | {{{:s}}}\n".format(sp.serial(), attributes))
 
 def _show_reaction_rule(rr, f=sys.stdout):
     if not rr.has_descriptor():
@@ -40,8 +43,8 @@ def _show_reaction_rule(rr, f=sys.stdout):
     f.write("{:s} > {:s} | {:s}\n".format(lhs, rhs, k))
 
 def _show_model(m, f=sys.stdout):
-    for sp in m.species_attributes():
-        _show_species(sp, f)
+    for sp, proceed in zip(m.species_attributes(), m.species_attributes_proceed()):
+        _show_species(sp, proceed, f)
     f.write('\n')
     for rr in m.reaction_rules():
         _show_reaction_rule(rr, f)
@@ -66,6 +69,10 @@ def show(target, *args, **kwargs):
         plot_world(target, *args, **kwargs)
     elif isinstance(target, (ecell4_base.core.Model, ecell4_base.core.NetworkModel, ecell4_base.core.NetfreeModel)):
         _show_model(target)
+    elif isinstance(target, ecell4_base.core.Species):
+        _show_species(target, False)
+    elif isinstance(target, ecell4_base.core.ReactionRule):
+        _show_reaction_rule(target)
     elif isinstance(target, str):
         try:
             w = simulation.load_world(target)
