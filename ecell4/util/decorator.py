@@ -35,8 +35,6 @@ class ProceedKeyword:
     def __deepcopy__(self, memo):
         return self
 
-PROCEED_KEYWORD = ProceedKeyword()
-
 class SpeciesAttributesCallback(Callback):
 
     def __init__(self):
@@ -52,7 +50,7 @@ class SpeciesAttributesCallback(Callback):
         SPECIES_ATTRIBUTES.extend(self.bitwise_operations)
 
     def notify_bitwise_operations(self, obj):
-        if isinstance(obj, parseobj.OrExp) and obj._elements()[-1] is PROCEED_KEYWORD:
+        if isinstance(obj, parseobj.OrExp) and obj._elements()[-1] is ProceedKeyword():
             elems = obj._elements()[: -1]
             if len(elems) < 2 or not isinstance(elems[-1], dict):
                 raise RuntimeError("A keyword 'proceed' must be placed just after a dict.")
@@ -99,6 +97,10 @@ class SpeciesAttributesCallback(Callback):
         raise RuntimeError(
             'ReactionRule definitions are not allowed'
             + ' in "species_attributes"')
+
+    @staticmethod
+    def reserved_keywords():
+        return {'proceed': ProceedKeyword()}
 
 class ReactionRulesCallback(Callback):
 

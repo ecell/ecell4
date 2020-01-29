@@ -30,6 +30,10 @@ class Callback(object):
     def notify_comparisons(self, obj):
         pass
 
+    @staticmethod
+    def reserved_keywords():
+        return {}
+
 class JustParseCallback(Callback):
 
     def __init__(self):
@@ -146,11 +150,18 @@ class ParseDecorator:
         else:
             self.__func = lambda *args, **kwargs: []
 
+        self.__reserved = {
+                "_eval": self.__evaluate,
+                "_callback": self.__callback,
+                }
+
     def set_callback(self, callback=None):
         if callback is None:
             self.__callback = self.__callback_class()
         else:
             self.__callback = callback
+
+        self.__reserved.update(self.__callback.reserved_keywords())
 
     def wrapper(self, *args, **kwargs):
         try:
@@ -170,12 +181,9 @@ class ParseDecorator:
             if ignore in vardict.keys():
                 del vardict[ignore]
 
-        if "_eval" not in vardict.keys():
-            vardict["_eval"] = self.__evaluate
-        if "_callback" not in vardict.keys():
-            vardict["_callback"] = self.__callback
-        else:
-            pass  #XXX: raise an exception?
+        for key, value in self.__reserved.items():
+            if key not in vardict:
+                vardict[key] = value
 
         for k in func_code.co_names:
             if (not k in vardict.keys()
@@ -206,17 +214,14 @@ class ParseDecorator:
         ignores = ("_", "__", "___", "_i", "_ii", "_iii",
             "_i1", "_i2", "_i3", "_dh", "_sh", "_oh")
 
-        if "_eval" not in calling_frame.f_globals.keys():
-            calling_frame.f_globals["_eval"] = self.__evaluate
-            self.__newvars["_eval"] = None
-        if "_callback" not in calling_frame.f_globals.keys():
-            calling_frame.f_globals["_callback"] = self.__callback
-            self.__newvars["_callback"] = None
-        else:
-            pass  #XXX: raise an exception?
+        for key, value in self.__reserved.items():
+            if key not in calling_frame.f_globals.keys():
+                vardict[key] = value
+                calling_frame.f_globals[key] = value
+                self.__newvars[key] = None
 
         for k in calling_frame.f_code.co_names:
-            if k in ('_eval', '_callback'):
+            if k in self.__reserved:
                 pass
             elif k in ignores:
                 # print "WARNING: '%s' was overridden." % k
