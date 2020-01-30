@@ -6,7 +6,6 @@ import os
 
 import ecell4_base
 
-from . import viz
 from .decorator import get_model
 from ..extra import unit
 
@@ -128,7 +127,8 @@ class Result(object):
         return self.observers[0]
 
     def plot(self, *args, **kwargs):
-        viz.plot_number_observer(self.observer, *args, **kwargs)
+        from .viz import plot_number_observer
+        plot_number_observer(self.observer, *args, **kwargs)
 
     def data(self):
         return self.observer.data()
@@ -142,6 +142,7 @@ class Result(object):
         return numpy.array(self.observer.data())
 
     def as_df(self):
+        """See as_dataframe."""
         return self.as_dataframe()
 
     def as_dataframe(self):
@@ -296,7 +297,7 @@ class Session(object):
         return Result(w, observers)
 
     def ensemble(
-        self, t, solver='ode', rndseed=None, ndiv=None, species_list=None,
+        self, t, solver='ode', rndseed=None, ndiv=None, species_list=None, observers=(),
         repeat=1, nproc=None, method=None, **kwargs):
         """
         Run simulations multiple times and return its ensemble.
@@ -305,6 +306,20 @@ class Session(object):
 
         Parameters
         ----------
+        t : array or Real
+            A sequence of time points for which to solve for 'm'.
+        solver : str, tuple or Factory, optional
+            Solver type. Choose one from 'ode', 'gillespie', 'spatiocyte', 'meso',
+            'bd' and 'egfrd'. Default is 'ode'.
+            When tuple is given, the first value must be str as explained above.
+            All the rest is used as arguments for the corresponding factory class.
+        ndiv : int, optional
+            A number of time points. If t is an array, ignored. If None, log all.
+        species_list : list of str, optional
+            A list of names of Species observed. If None, log all.
+            Default is None.
+        observers : Observer or list, optional
+            A list of extra observer references.
         repeat : int, optional
             A number of runs. Default is 1.
         nproc : int, optional
@@ -319,13 +334,14 @@ class Session(object):
             `run_sge`, or `run_multiprocessing`.
             See each function for more details.
 
+        Returns
+        -------
+        results : list
+            A list of Result objects. The list contains `n` results.
+
         See Also
         --------
-        ecell4.extra.ensemble.run_serial
-        ecell4.extra.ensemble.run_sge
-        ecell4.extra.ensemble.run_slurm
-        ecell4.extra.ensemble.run_multiprocessing
-        ecell4.extra.ensemble.run_azure
+        ecell4.extra.ensemble.run_ensemble
 
         """
         from ..extra.ensemble import genseeds
@@ -338,23 +354,14 @@ class Session(object):
             raise ValueError(
                 "A wrong seed for the random number generation was given. Use 'genseeds'.")
 
-        jobs = [{'session': self, 't': t, 'solver': solver, 'myseed': myseed, 'ndiv': ndiv, 'species_list': species_list}]
+        jobs = [{
+            'session': self, 't': t, 'solver': solver, 'myseed': myseed, 'ndiv': ndiv,
+            'species_list': species_list, 'observers': observers,
+            }]
 
-        from ..extra.ensemble import run_serial, run_sge, run_slurm, run_multiprocessing, run_azure
-        if method is None or method.lower() == "serial":
-            results = run_serial(singlerun, jobs, n=repeat, **kwargs)
-        elif method.lower() == "sge":
-            results = run_sge(singlerun, jobs, n=repeat, nproc=nproc, **kwargs)
-        elif method.lower() == "slurm":
-            results = run_slurm(singlerun, jobs, n=repeat, nproc=nproc, **kwargs)
-        elif method.lower() == "multiprocessing":
-            results = run_multiprocessing(singlerun, jobs, n=repeat, nproc=nproc, **kwargs)
-        elif method.lower() == "azure":
-            results = run_azure(singlerun, jobs, n=repeat, nproc=nproc, **kwargs)
-        else:
-            raise ValueError(
-                'Argument "method" must be one of "serial", "multiprocessing", "slurm" and "sge".')
+        from ..extra.ensemble import run_ensemble
+        results = run_ensemble(singlerun, jobs, repeat=repeat, nproc=nproc, **kwargs)
 
         assert len(results) == len(jobs) == 1
         assert len(results[0]) == repeat
-        return results
+        return results[0]

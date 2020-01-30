@@ -19,6 +19,56 @@ from . import sge
 from . import slurm
 
 
+def run_ensemble(target, jobs, repeat=1, nproc=None, method=None, **kwargs):
+    """
+    Evaluate the given function with each set of arguments, and return a list of results.
+
+    Parameters
+    ----------
+    target : function
+        A function to be evaluated. The function must accepts three arguments,
+        which are a list of arguments given as `jobs`, a job and task id (int).
+    jobs : list
+        A list of arguments passed to the function.
+    repeat : int, optional
+        A number of tasks. Repeat the evaluation `n` times for each job.
+        1 for default.
+    nproc : int, optional
+        A number of cores available once.
+        If nothing is given, all available cores are used.
+    method : str, optional
+        The way for running multiple jobs.
+        Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
+        Default is None, which works as 'serial'.
+
+    Returns
+    -------
+    results : list
+        A list of results. Each element is a list containing `repeat` results.
+
+    See Also
+    --------
+    ecell4.extra.ensemble.run_serial
+    ecell4.extra.ensemble.run_sge
+    ecell4.extra.ensemble.run_slurm
+    ecell4.extra.ensemble.run_multiprocessing
+    ecell4.extra.ensemble.run_azure
+
+    """
+    if method is None or method.lower() == "serial":
+        return run_serial(target, jobs, n=repeat, **kwargs)
+    elif method.lower() == "sge":
+        return run_sge(target, jobs, n=repeat, nproc=nproc, **kwargs)
+    elif method.lower() == "slurm":
+        return run_slurm(target, jobs, n=repeat, nproc=nproc, **kwargs)
+    elif method.lower() == "multiprocessing":
+        return run_multiprocessing(target, jobs, n=repeat, nproc=nproc, **kwargs)
+    elif method.lower() == "azure":
+        return run_azure(target, jobs, n=repeat, nproc=nproc, **kwargs)
+
+    raise ValueError(
+        'Argument "method" must be either "serial", "multiprocessing", "slurm", "sge" or "azure".')
+
 def run_serial(target, jobs, n=1, **kwargs):
     """
     Evaluate the given function with each set of arguments, and return a list of results.
