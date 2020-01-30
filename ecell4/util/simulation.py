@@ -5,43 +5,8 @@ from .decorator import get_model, reset_model
 from . import viz
 from ..extra import unit
 from ..extra.ensemble import ensemble_simulations
+from .session import load_world
 
-
-def load_world(filename):
-    """
-    Load a world from the given HDF5 filename.
-    The return type is determined by ``ecell4_base.core.load_version_information``.
-
-    Parameters
-    ----------
-    filename : str
-        A HDF5 filename.
-
-    Returns
-    -------
-    w : World
-        Return one from ``BDWorld``, ``EGFRDWorld``, ``MesoscopicWorld``,
-        ``ODEWorld``, ``GillespieWorld`` and ``SpatiocyteWorld``.
-
-    """
-    import ecell4_base
-
-    vinfo = ecell4_base.core.load_version_information(filename)
-    if vinfo.startswith("ecell4-bd"):
-        return ecell4_base.bd.World(filename)
-    elif vinfo.startswith("ecell4-egfrd"):
-        return ecell4_base.egfrd.World(filename)
-    elif vinfo.startswith("ecell4-meso"):
-        return ecell4_base.meso.World(filename)
-    elif vinfo.startswith("ecell4-ode"):
-        return ecell4_base.ode.World(filename)
-    elif vinfo.startswith("ecell4-gillespie"):
-        return ecell4_base.gillespie.World(filename)
-    elif vinfo.startswith("ecell4-spatiocyte"):
-        return ecell4_base.spatiocyte.World(filename)
-    elif vinfo == "":
-        raise RuntimeError("No version information was found in [{0}]".format(filename))
-    raise RuntimeError("Unknown version information [{0}]".format(vinfo))
 
 def run_simulation(
         t, y0=None, volume=1.0, model=None, solver='ode',

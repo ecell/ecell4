@@ -156,6 +156,8 @@ def plot_number_observer_with_matplotlib(*args, **kwargs):
                  if key not in special_keys}
 
     step = kwargs.get('step', None)
+    if step is True:
+        step = 'post'
 
     if 'axes.prop_cycle' in plt.rcParams.keys():
         color_cycle = [prop['color'] for prop in plt.rcParams['axes.prop_cycle']]

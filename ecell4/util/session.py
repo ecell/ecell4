@@ -1,6 +1,9 @@
 import copy
 import collections
 import numbers
+import tempfile
+import os
+
 import ecell4_base
 
 from . import viz
@@ -8,9 +11,41 @@ from .decorator import get_model
 from ..extra import unit
 
 
-def get_factory(solver, *args):
-    import ecell4_base
+def load_world(filename):
+    """
+    Load a world from the given HDF5 filename.
+    The return type is determined by ``ecell4_base.core.load_version_information``.
 
+    Parameters
+    ----------
+    filename : str
+        A HDF5 filename.
+
+    Returns
+    -------
+    w : World
+        Return one from ``BDWorld``, ``EGFRDWorld``, ``MesoscopicWorld``,
+        ``ODEWorld``, ``GillespieWorld`` and ``SpatiocyteWorld``.
+
+    """
+    vinfo = ecell4_base.core.load_version_information(filename)
+    if vinfo.startswith("ecell4-bd"):
+        return ecell4_base.bd.World(filename)
+    elif vinfo.startswith("ecell4-egfrd"):
+        return ecell4_base.egfrd.World(filename)
+    elif vinfo.startswith("ecell4-meso"):
+        return ecell4_base.meso.World(filename)
+    elif vinfo.startswith("ecell4-ode"):
+        return ecell4_base.ode.World(filename)
+    elif vinfo.startswith("ecell4-gillespie"):
+        return ecell4_base.gillespie.World(filename)
+    elif vinfo.startswith("ecell4-spatiocyte"):
+        return ecell4_base.spatiocyte.World(filename)
+    elif vinfo == "":
+        raise RuntimeError("No version information was found in [{0}]".format(filename))
+    raise RuntimeError("Unknown version information [{0}]".format(vinfo))
+
+def get_factory(solver, *args):
     if solver == 'ode':
         return ecell4_base.ode.Factory(*args)
     elif solver == 'gillespie':
@@ -32,7 +67,6 @@ def get_shape(shape, *args):
     if not isinstance(shape, str):
         raise ValueError("Invalid shape was given [{}]. This must be 'str'".format(repr(shape)))
 
-    import ecell4_base
     shape = shape.lower()
     shape_map = {
         'aabb': ecell4_base.core.AABB,
@@ -114,6 +148,29 @@ class Result(object):
         """Require pandas"""
         import pandas
         return pandas.DataFrame(data=self.data(), columns=['t'] + self.species_list())
+
+    def __getstate__(self):
+        fd, tmpfile = tempfile.mkstemp()
+        try:
+            self.world.save(tmpfile)
+            with open(tmpfile, 'rb') as fp:
+                world = fp.read()
+        finally:
+            os.remove(tmpfile)
+        return (world, self.observers)
+
+    def __setstate__(self, state):
+        if len(state) != 2:
+            raise ValueError("Invalid state!")
+        fd, tmpfile = tempfile.mkstemp()
+        try:
+            with open(tmpfile, 'wb') as fp:
+                fp.write(state[0])
+            world = load_world(tmpfile)
+        finally:
+            os.remove(tmpfile)
+        self.world = world
+        self.observers = state[1]
 
 class Session(object):
 
