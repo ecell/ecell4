@@ -1,3 +1,5 @@
+# from . import biocyc, biogrid, ecocyc, pdb, psicquic, pubmed.py, rdf, sbml, sparql, uniprot
+
 def print_descriptions(desc):
     for i, entry in enumerate(desc):
         if i > 0:

@@ -1,3 +1,5 @@
 from ecell4_base.core import *
 from ecell4_base import *
-from ecell4 import *
+from ecell4.util import *
+from ecell4 import plotting
+# from ecell4 import datasource, extra, mca

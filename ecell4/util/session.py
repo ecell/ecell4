@@ -126,15 +126,18 @@ class Result(object):
     def observer(self):
         return self.observers[0]
 
-    def plot(self, *args, **kwargs):
-        from .viz import plot_number_observer
-        plot_number_observer(self.observer, *args, **kwargs)
-
     def data(self):
         return self.observer.data()
 
+    def targets(self):
+        return self.observer.targets()
+
     def species_list(self):
         return [sp.serial() for sp in self.observer.targets()]
+
+    def plot(self, *args, **kwargs):
+        from ..plotting import plot_number_observer
+        plot_number_observer(self.observer, *args, **kwargs)
 
     def as_array(self):
         """Require numpy"""
