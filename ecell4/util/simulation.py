@@ -43,56 +43,6 @@ def load_world(filename):
         raise RuntimeError("No version information was found in [{0}]".format(filename))
     raise RuntimeError("Unknown version information [{0}]".format(vinfo))
 
-def get_factory(solver, *args):
-    import ecell4_base
-
-    if solver == 'ode':
-        return ecell4_base.ode.Factory(*args)
-    elif solver == 'gillespie':
-        return ecell4_base.gillespie.Factory(*args)
-    elif solver == 'spatiocyte':
-        return ecell4_base.spatiocyte.Factory(*args)
-    elif solver == 'meso':
-        return ecell4_base.meso.Factory(*args)
-    elif solver == 'bd':
-        return ecell4_base.bd.Factory(*args)
-    elif solver == 'egfrd':
-        return ecell4_base.egfrd.Factory(*args)
-    else:
-        raise ValueError(
-            'unknown solver name was given: ' + repr(solver)
-            + '. use ode, gillespie, spatiocyte, meso, bd or egfrd')
-
-def get_shape(shape, *args):
-    if not isinstance(shape, str):
-        raise ValueError("Invalid shape was given [{}]. This must be 'str'".format(repr(shape)))
-
-    import ecell4_base
-    shape = shape.lower()
-    shape_map = {
-        'aabb': ecell4_base.core.AABB,
-        # 'affinetransformation': ecell4_base.core.AffineTransformation,
-        'cylinder': ecell4_base.core.Cylinder,
-        'cylindricalsurface': ecell4_base.core.CylindricalSurface,
-        'meshsurface': ecell4_base.core.MeshSurface,
-        'planarsurface': ecell4_base.core.PlanarSurface,
-        'rod': ecell4_base.core.Rod,
-        'rodsurface': ecell4_base.core.RodSurface,
-        'sphere': ecell4_base.core.Sphere,
-        'sphericalsurface': ecell4_base.core.SphericalSurface,
-        # 'complement': ecell4_base.core.Complement,
-        # 'union': ecell4_base.core.Union,
-        }
-    if shape in shape_map:
-        args = [
-            value.to_base_units().magnitude if isinstance(value, unit._Quantity) else value
-            for value in args]
-        return shape_map[shape](*args)
-    else:
-        raise ValueError(
-            'unknown shape type was given: ' + repr(shape)
-            + '. use {}'.format(', '.join(sorted(shape_map.keys()))))
-
 def run_simulation(
         t, y0=None, volume=1.0, model=None, solver='ode',
         is_netfree=False, species_list=None, without_reset=False,
@@ -161,10 +111,6 @@ def run_simulation(
         Return nothing if else.
 
     """
-    y0 = y0 or {}
-    opt_kwargs = opt_kwargs or {}
-    structures = structures or {}
-
     for key, value in kwargs.items():
         if key == 'r':
             return_type = value
@@ -178,138 +124,36 @@ def run_simulation(
             raise ValueError(
                 "An unknown keyword argument was given [{}={}]".format(key, value))
 
-    import ecell4_base
-
-    if unit.HAS_PINT:
-        if isinstance(t, unit._Quantity):
-            if unit.STRICT and not unit.check_dimensionality(t, '[time]'):
-                raise ValueError("Cannot convert [t] from '{}' ({}) to '[time]'".format(t.dimensionality, t.u))
-            t = t.to_base_units().magnitude
-
-        if isinstance(volume, unit._Quantity):
-            if unit.STRICT:
-                if isinstance(volume.magnitude, ecell4_base.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
-                    raise ValueError("Cannot convert [volume] from '{}' ({}) to '[length]'".format(
-                        volume.dimensionality, volume.u))
-                elif not unit.check_dimensionality(volume, '[volume]'):
-                    raise ValueError("Cannot convert [volume] from '{}' ({}) to '[volume]'".format(
-                        volume.dimensionality, volume.u))
-            volume = volume.to_base_units().magnitude
-
-        if not isinstance(solver, str) and isinstance(solver, collections.Iterable):
-            solver = [
-                value.to_base_units().magnitude if isinstance(value, unit._Quantity) else value
-                for value in solver]
-
-    if factory is not None:
-        # f = factory  #XXX: will be deprecated in the future. just use solver
-        raise ValueError(
-            "Argument 'factory' is no longer available. Use 'solver' instead.")
-    elif isinstance(solver, str):
-        f = get_factory(solver)
-    elif isinstance(solver, collections.Iterable):
-        f = get_factory(*solver)
-    else:
-        f = solver
-
-    if rndseed is not None:
-        f = f.rng(ecell4_base.core.GSLRandomNumberGenerator(rndseed))
-
-    if model is None:
-        model = get_model(is_netfree, without_reset)
-
-    w = f.world(volume)
-    edge_lengths = w.edge_lengths()
-
-    if unit.HAS_PINT:
-        y0 = y0.copy()
-        for key, value in y0.items():
-            if isinstance(value, unit._Quantity):
-                if not unit.STRICT:
-                    y0[key] = value.to_base_units().magnitude
-                elif unit.check_dimensionality(value, '[substance]'):
-                    y0[key] = value.to_base_units().magnitude
-                elif unit.check_dimensionality(value, '[concentration]'):
-                    volume = w.volume() if not isinstance(w, ecell4_base.spatiocyte.SpatiocyteWorld) else w.actual_volume()
-                    y0[key] = value.to_base_units().magnitude * volume
-                else:
-                    raise ValueError(
-                        "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
-                            key, value.dimensionality, value.u))
-
-    if not isinstance(w, ecell4_base.ode.ODEWorld):
-        w.bind_to(model)
-
-    for (name, shape) in (structures.items() if isinstance(structures, dict) else structures):
-        if isinstance(shape, str):
-            w.add_structure(ecell4_base.core.Species(name), get_shape(shape))
-        elif isinstance(shape, collections.Iterable):
-            w.add_structure(ecell4_base.core.Species(name), get_shape(*shape))
-        else:
-            w.add_structure(ecell4_base.core.Species(name), shape)
-
-    if isinstance(w, ecell4_base.ode.ODEWorld):
-        # w.bind_to(model)  # stop binding for ode
-        for serial, n in y0.items():
-            w.set_value(ecell4_base.core.Species(serial), n)
-    else:
-        # w.bind_to(model)
-        for serial, n in y0.items():
-            w.add_molecules(ecell4_base.core.Species(serial), n)
-
-    if not isinstance(t, collections.Iterable):
-        t = [float(t) * i / 100 for i in range(101)]
-
-    if species_list is not None:
-        obs = ecell4_base.core.TimingNumberObserver(t, species_list)
-    else:
-        obs = ecell4_base.core.TimingNumberObserver(t)
-    sim = f.simulator(w, model)
-    # sim = f.simulator(w)
-
-    if not isinstance(observers, collections.Iterable):
-        observers = (observers, )
-    if return_type not in ('world', 'none', None):
-        observers = (obs, ) + tuple(observers)
-
-    if progressbar > 0:
-        from .progressbar import progressbar as pb
-        pb(sim, timeout=progressbar, flush=True).run(t[-1], observers)
-    else:
-        sim.run(t[-1], observers)
+    from .session import Session
+    session = Session(model=model, y0=y0, structures=structures, volume=volume)
+    ret = session.run(t, solver=solver, rndseed=rndseed, ndiv=None, species_list=species_list, observers=observers)
 
     if return_type in ('matplotlib', 'm'):
         if isinstance(opt_args, (list, tuple)):
-            viz.plot_number_observer(obs, *opt_args, **opt_kwargs)
+            ret.plot(*opt_args, **opt_kwargs)
         elif isinstance(opt_args, dict):
             # opt_kwargs is ignored
-            viz.plot_number_observer(obs, **opt_args)
+            ret.plot(*opt_args)
         else:
             raise ValueError('opt_args [{}] must be list or dict.'.format(
                 repr(opt_args)))
     elif return_type in ('nyaplot', 'n'):
         if isinstance(opt_args, (list, tuple)):
-            viz.plot_number_observer_with_nya(obs, *opt_args, **opt_kwargs)
+            viz.plot_number_observer_with_nya(ret.observer, *opt_args, **opt_kwargs)
         elif isinstance(opt_args, dict):
             # opt_kwargs is ignored
-            viz.plot_number_observer_with_nya(obs, **opt_args)
+            viz.plot_number_observer_with_nya(ret.obs, **opt_args)
         else:
             raise ValueError('opt_args [{}] must be list or dict.'.format(
                 repr(opt_args)))
     elif return_type in ('observer', 'o'):
-        return obs
+        return ret.observer
     elif return_type in ('array', 'a'):
-        return obs.data()
+        return ret.data()
     elif return_type in ('dataframe', 'd'):
-        import pandas
-        import numpy
-        data = numpy.array(obs.data()).T
-        return pandas.concat([
-            pandas.DataFrame(dict(Time=data[0], Value=data[i + 1],
-                                  Species=sp.serial(), **opt_kwargs))
-            for i, sp in enumerate(obs.targets())])
+        return ret.as_df()
     elif return_type in ('world', 'w'):
-        return sim.world()
+        return ret.world
     elif return_type is None or return_type in ('none', ):
         return
     else:
