@@ -13,6 +13,7 @@ from tempfile import NamedTemporaryFile
 
 from .styles import default_color_scale, attractive_mpl_color_scale
 
+from ._core import get_range_of_world, get_range_of_trajectories
 from ._matplotlib import *
 
 def __on_ipython_notebook():
@@ -257,77 +258,6 @@ def __parse_world(
 
     return species
 
-def __get_range_of_world(world, scale=1.0):
-    edge_lengths = world.edge_lengths() * scale
-    max_length = max(tuple(edge_lengths))
-
-    rangex = [(edge_lengths[0] - max_length) * 0.5,
-              (edge_lengths[0] + max_length) * 0.5]
-    rangey = [(edge_lengths[1] - max_length) * 0.5,
-              (edge_lengths[1] + max_length) * 0.5]
-    rangez = [(edge_lengths[2] - max_length) * 0.5,
-              (edge_lengths[2] + max_length) * 0.5]
-
-    return {'x': rangex, 'y': rangey, 'z': rangez}
-
-def __get_range_of_trajectories(data, plot_range=None):
-    from ecell4_base.core import Real3
-
-    if plot_range is None:
-        if len(data) == 0:
-            xmin, xmax, ymin, ymax, zmin, zmax = 0, 1, 0, 1, 0, 1
-        else:
-            xmin, xmax, ymin, ymax, zmin, zmax = None, None, None, None, None, None
-
-            for i, traj in enumerate(data):
-                xarr, yarr, zarr = [], [], []
-                for pos in traj:
-                    xarr.append(pos[0])
-                    yarr.append(pos[1])
-                    zarr.append(pos[2])
-
-                if xmin is None:
-                    if len(traj) > 0:
-                        xmin, xmax = min(xarr), max(xarr)
-                        ymin, ymax = min(yarr), max(yarr)
-                        zmin, zmax = min(zarr), max(zarr)
-                else:
-                    xmin, xmax = min([xmin] + xarr), max([xmax] + xarr)
-                    ymin, ymax = min([ymin] + yarr), max([ymax] + yarr)
-                    zmin, zmax = min([zmin] + zarr), max([zmax] + zarr)
-
-        max_length = max(xmax - xmin, ymax - ymin, zmax - zmin)
-        rangex = [(xmin + xmax - max_length) * 0.5,
-                  (xmin + xmax + max_length) * 0.5]
-        rangey = [(ymin + ymax - max_length) * 0.5,
-                  (ymin + ymax + max_length) * 0.5]
-        rangez = [(zmin + zmax - max_length) * 0.5,
-                  (zmin + zmax + max_length) * 0.5]
-
-        return {'x': rangex, 'y': rangey, 'z': rangez}
-    elif isinstance(plot_range, dict):
-        return plot_range
-    elif isinstance(plot_range, (list, tuple)):
-        if len(plot_range) != 3:
-            raise ValueError(
-                'The size of plot_range [{}] must be 3.'.format(len(plot_range)))
-        elif (isinstance(plot_range[0], (list, tuple)) and
-                isinstance(plot_range[1], (list, tuple)) and
-                isinstance(plot_range[2], (list, tuple))):
-            return {'x': plot_range[0], 'y': plot_range[1], 'z': plot_range[2]}
-        else:
-            return {'x': (0, plot_range[0]),
-                    'y': (0, plot_range[1]),
-                    'z': (0, plot_range[2])}
-    elif isinstance(plot_range, Real3):
-        return {'x': (0, plot_range[0]),
-                'y': (0, plot_range[1]),
-                'z': (0, plot_range[2])}
-    else:
-        raise ValueError(
-            'plot_range must be list, tuple or dict. [{}] was given.'.format(
-                repr(plot_range)))
-
 def plot_movie_with_elegans(
         worlds, radius=None, width=500, height=500, config=None, grid=False,
         species_list=None):
@@ -377,7 +307,7 @@ def plot_movie_with_elegans(
         'autorange': False,
         'space_mode': 'wireframe',
         'grid': grid,
-        'range': __get_range_of_world(worlds[0])
+        'range': get_range_of_world(worlds[0])
     }
 
     model_id = '"movie' + str(uuid.uuid4()) + '"'
@@ -481,7 +411,7 @@ def plot_world_with_elegans(
         'options': {
             'world_width': width,
             'world_height': height,
-            'range': __get_range_of_world(world),
+            'range': get_range_of_world(world),
             'autorange': False,
             'grid': grid,
             'save_image': True
@@ -762,7 +692,7 @@ def plot_trajectory_with_elegans(
                   (zmin + zmax + max_length) * 0.5]
         wrange = {'x': rangex, 'y': rangey, 'z': rangez}
     else:
-        wrange = __get_range_of_trajectories(None, plot_range)
+        wrange = get_range_of_trajectories(None, plot_range)
 
     model = {
         'plots': plots,
@@ -999,7 +929,7 @@ def plot_movie_with_attractive_mpl(
     # print("Start preparing mplot3d ...")
 
     fig, ax = __prepare_mplot3d_with_attractive_mpl(
-        __get_range_of_world(worlds[0], scale), figsize, grid, wireframe, angle,
+        get_range_of_world(worlds[0], scale), figsize, grid, wireframe, angle,
         noaxis, whratio)
 
     from mpl_toolkits.mplot3d.art3d import juggle_axes
@@ -1094,7 +1024,7 @@ def plot_world_with_attractive_mpl(
             set(species_list), key=species_list.index)  # XXX: pick unique ones
 
     fig, ax = __prepare_mplot3d_with_attractive_mpl(
-        __get_range_of_world(world, scale), figsize, grid, wireframe, angle,
+        get_range_of_world(world, scale), figsize, grid, wireframe, angle,
         noaxis, whratio)
     scatters, plots = __scatter_world_with_attractive_mpl(
         world, ax, species_list, marker_size, max_count, scale, **kwargs)

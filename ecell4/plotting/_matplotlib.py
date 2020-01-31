@@ -3,6 +3,8 @@ import types
 import random
 
 from .styles import default_color_scale, matplotlib_color_scale
+from ._core import get_range_of_world, get_range_of_trajectories
+
 
 __all__ = [
     "plot_number_observer_with_matplotlib",
@@ -15,6 +17,7 @@ __all__ = [
     "plot_world2d_with_matplotlib",
     "plot_movie2d_with_matplotlib",
     ]
+
 
 def plot_number_observer_with_matplotlib(*args, **kwargs):
     """
@@ -270,7 +273,7 @@ def plot_world_with_matplotlib(
             set(species_list), key=species_list.index)  # XXX: pick unique ones
 
     fig, ax = __prepare_mplot3d_with_matplotlib(
-        __get_range_of_world(world), figsize, grid, wireframe, angle, noaxis)
+        get_range_of_world(world), figsize, grid, wireframe, angle, noaxis)
     scatters, plots = __scatter_world_with_matplotlib(
         world, ax, species_list, marker_size, max_count, **kwargs)
 
@@ -315,7 +318,7 @@ def plot_trajectory_with_matplotlib(
         data = random.sample(data, max_count)
 
     fig, ax = __prepare_mplot3d_with_matplotlib(
-        __get_range_of_trajectories(data, plot_range),
+        get_range_of_trajectories(data, plot_range),
         figsize, grid, wireframe, angle, noaxis)
 
     lines = []
@@ -407,7 +410,7 @@ def plot_trajectory2d_with_matplotlib(
     if max_count is not None and len(data) > max_count:
         data = random.sample(data, max_count)
 
-    wrange = __get_range_of_trajectories(data, plot_range)
+    wrange = get_range_of_trajectories(data, plot_range)
     wrange = (wrange['x'], wrange['y'], wrange['z'])
     wrange = {'x': wrange[xidx], 'y': wrange[yidx]}
     fig, ax = __prepare_plot_with_matplotlib(
@@ -505,7 +508,7 @@ def plot_movie_of_trajectory2d_with_matplotlib(
 
     # print("Start preparing mplot3d ...")
 
-    wrange = __get_range_of_trajectories(data, plot_range)
+    wrange = get_range_of_trajectories(data, plot_range)
     wrange = (wrange['x'], wrange['y'], wrange['z'])
     wrange = {'x': wrange[xidx], 'y': wrange[yidx]}
     fig, ax = __prepare_plot_with_matplotlib(
@@ -614,7 +617,7 @@ def plot_movie_with_matplotlib(
     # print("Start preparing mplot3d ...")
 
     fig, ax = __prepare_mplot3d_with_matplotlib(
-        __get_range_of_world(worlds[0]), figsize, grid, wireframe, angle, noaxis)
+        get_range_of_world(worlds[0]), figsize, grid, wireframe, angle, noaxis)
 
     from mpl_toolkits.mplot3d.art3d import juggle_axes
 
@@ -735,7 +738,7 @@ def plot_movie_of_trajectory_with_matplotlib(
     # print("Start preparing mplot3d ...")
 
     fig, ax = __prepare_mplot3d_with_matplotlib(
-        __get_range_of_trajectories(data, plot_range),
+        get_range_of_trajectories(data, plot_range),
         figsize, grid, wireframe, angle, noaxis)
 
     def _update_plot(i, plots, lines):
@@ -814,7 +817,7 @@ def plot_world2d_with_matplotlib(
         species_list = sorted(
             set(species_list), key=species_list.index)  # XXX: pick unique ones
 
-    wrange = __get_range_of_world(world, scale)
+    wrange = get_range_of_world(world, scale)
     wrange = (wrange['x'], wrange['y'], wrange['z'])
     wrange = {'x': wrange[xidx], 'y': wrange[yidx]}
 
@@ -940,7 +943,7 @@ def plot_movie2d_with_matplotlib(
             species_list = sorted(
                 set(species_list), key=species_list.index)  # XXX: pick unique ones
 
-    wrange = __get_range_of_world(worlds[0], scale)
+    wrange = get_range_of_world(worlds[0], scale)
     wrange = (wrange['x'], wrange['y'], wrange['z'])
     wrange = {'x': wrange[xidx], 'y': wrange[yidx]}
 
