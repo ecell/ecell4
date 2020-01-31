@@ -118,7 +118,7 @@ def run_serial(target, jobs, n=1, **kwargs):
     ecell4.extra.ensemble.run_azure
 
     """
-    return [[target(copy.copy(job), i + 1, j + 1) for j in range(n)] for i, job in enumerate(jobs)]
+    return [[target(copy.deepcopy(job), i + 1, j + 1) for j in range(n)] for i, job in enumerate(jobs)]
 
 def run_multiprocessing(target, jobs, n=1, nproc=None, **kwargs):
     """
