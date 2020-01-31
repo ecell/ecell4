@@ -2,6 +2,7 @@ import os
 import types
 import random
 
+from ..util.session import load_world
 from .styles import default_color_scale, matplotlib_color_scale
 from ._core import get_range_of_world, get_range_of_trajectories
 
@@ -19,7 +20,7 @@ __all__ = [
     ]
 
 
-def plot_number_observer_with_matplotlib(*args, **kwargs):
+def plot_number_observer(*args, **kwargs):
     """
     Generate a plot from NumberObservers and show it on IPython notebook
     with matplotlib.
@@ -28,15 +29,15 @@ def plot_number_observer_with_matplotlib(*args, **kwargs):
     ----------
     obs : NumberObserver (e.g. FixedIntervalNumberObserver)
     fmt : str, optional
-    opt : dict, optional
-        matplotlib plot options.
 
     Examples
     --------
     >>> plot_number_observer(obs1)
     >>> plot_number_observer(obs1, 'o')
-    >>> plot_number_observer(obs1, obs2, obs3, {'linewidth': 2})
-    >>> plot_number_observer(obs1, 'k-', obs2, 'k--')
+    >>> plot_number_observer(obs1, obs2, obs3, linewidth=2)
+    >>> plot_number_observer(obs1, '-', obs2, '--')
+    >>> plot_number_observer(obs1, '-', lambda t: 30, '--')
+
 
     """
     import matplotlib.pylab as plt
@@ -175,6 +176,8 @@ def plot_number_observer_with_matplotlib(*args, **kwargs):
     else:
         plt.show()
 
+plot_number_observer_with_matplotlib = plot_number_observer
+
 def __prepare_mplot3d_with_matplotlib(
         wrange, figsize, grid, wireframe, angle, noaxis):
     from mpl_toolkits.mplot3d import Axes3D
@@ -229,16 +232,7 @@ def __scatter_world_with_matplotlib(
         plots.extend(ax.plot([], [], 'o', c=c, label=name))  #XXX: A dirty hack to show the legends with keeping the 3d transparency effect on scatter
     return scatters, plots
 
-def __plot_trajectory_with_matplotlib(lines, ax, upto=None, **kwargs):
-    color_scale = default_color_scale()
-    plots = []
-    for i, line in enumerate(lines):
-        plots.append(
-            ax.plot(line[0][: upto], line[1][: upto], line[2][: upto],
-                label=i, color=color_scale.get_color(i), **kwargs)[0])
-    return plots
-
-def plot_world_with_matplotlib(
+def plot_world(
         world, marker_size=3, figsize=6, grid=True,
         wireframe=False, species_list=None, max_count=1000, angle=None,
         legend=True, noaxis=False, **kwargs):
@@ -267,6 +261,9 @@ def plot_world_with_matplotlib(
     """
     import matplotlib.pyplot as plt
 
+    if isinstance(world, str):
+        world = load_world(world)
+
     if species_list is None:
         species_list = [p.species().serial() for pid, p in world.list_particles()]
         species_list = sorted(
@@ -286,6 +283,8 @@ def plot_world_with_matplotlib(
         ax.legend(handles=plots, labels=species_list,  **legend_opts)
 
     plt.show()
+
+plot_world_with_matplotlib = plot_world
 
 def plot_trajectory_with_matplotlib(
         obs, max_count=10, figsize=6, legend=True, angle=None,
@@ -341,6 +340,15 @@ def plot_trajectory_with_matplotlib(
             legend_opts.update(legend)
         ax.legend(**legend_opts)
     plt.show()
+
+def __plot_trajectory_with_matplotlib(lines, ax, upto=None, **kwargs):
+    color_scale = default_color_scale()
+    plots = []
+    for i, line in enumerate(lines):
+        plots.append(
+            ax.plot(line[0][: upto], line[1][: upto], line[2][: upto],
+                label=i, color=color_scale.get_color(i), **kwargs)[0])
+    return plots
 
 def __prepare_plot_with_matplotlib(
         wrange, figsize, grid, wireframe, noaxis):

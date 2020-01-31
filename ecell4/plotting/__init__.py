@@ -11,10 +11,14 @@ import random
 import types
 from tempfile import NamedTemporaryFile
 
-from .styles import default_color_scale, attractive_mpl_color_scale
+from ..util.session import load_world
 
+from .styles import default_color_scale, attractive_mpl_color_scale
 from ._core import get_range_of_world, get_range_of_trajectories
+
 from ._matplotlib import *
+from ._plotly import *
+
 
 def __on_ipython_notebook():
     try:
@@ -57,7 +61,8 @@ def plot_number_observer(*args, **kwargs):
             import warnings
             warnings.warn(
                 "An option 'to_png' is not available with matplotlib. Just ignored.")
-        plot_number_observer_with_matplotlib(*args, **kwargs)
+        from . import _matplotlib
+        _matplotlib.plot_number_observer(*args, **kwargs)
 
 def plot_world(*args, **kwargs):
     """
@@ -82,7 +87,8 @@ def plot_world(*args, **kwargs):
     if interactive:
         plot_world_with_elegans(*args, **kwargs)
     else:
-        plot_world_with_matplotlib(*args, **kwargs)
+        from . import _matplotlib
+        _matplotlib.plot_world(*args, **kwargs)
 
 def plot_movie(*args, **kwargs):
     """
@@ -374,10 +380,6 @@ def plot_world_with_elegans(
     config = config or {}
 
     from IPython.core.display import display, HTML
-    from .simulation import load_world
-
-    if isinstance(world, str):
-        world = load_world(world)
 
     species = __parse_world(world, radius, species_list, max_count, predicator)
     color_scale = default_color_scale(config=config)
@@ -1090,54 +1092,6 @@ def __prepare_mplot3d_with_attractive_mpl(
 
     plt.subplots_adjust(left=0.0, right=1.0 / whratio, top=1.02, bottom=0.02)
     return (fig, ax)
-
-def plot_world_with_plotly(world, species_list=None, max_count=1000):
-    """
-    Plot a World on IPython Notebook
-    """
-    if isinstance(world, str):
-        from .simulation import load_world
-        world = load_world(world)
-
-    if species_list is None:
-        species_list = [sp.serial() for sp in world.list_species()]
-        species_list.sort()
-
-    import random
-    from ecell4_base.core import Species
-
-    positions = {}
-    for serial in species_list:
-        x, y, z = [], [], []
-        particles = world.list_particles_exact(Species(serial))
-        if max_count is not None and len(particles) > max_count:
-            particles = random.sample(particles, max_count)
-        for pid, p in particles:
-            pos = p.position()
-            x.append(pos[0])
-            y.append(pos[1])
-            z.append(pos[2])
-
-        positions[serial] = (x, y, z)
-
-    import plotly
-    import plotly.graph_objs as go
-
-    plotly.offline.init_notebook_mode()
-
-    marker = dict(size=6, line=dict(color='rgb(204, 204, 204)', width=1),
-                  opacity=0.9, symbol='circle')
-
-    data = []
-    for serial, (x, y, z) in positions.items():
-        trace = go.Scatter3d(
-            x=x, y=y, z=z, mode='markers',
-            marker=marker, name=serial)
-        data.append(trace)
-
-    layout = go.Layout(margin=dict(l=0, r=0, b=0, t=0))
-    fig = go.Figure(data=data, layout=layout)
-    plotly.offline.iplot(fig)
 
 def display_pdb(entity, width=400, height=400):
     from IPython.display import display, IFrame
