@@ -1,4 +1,6 @@
 import re
+import urllib.parse
+import urllib.request
 
 from rdflib import Namespace
 from rdflib.namespace import RDF, RDFS, SKOS
@@ -54,6 +56,36 @@ def whereis(entity):
             if topology is not None:
                 desc.extend(description(topology))
     return desc
+
+def idmapping(query, source='ACC+ID', target='ACC'):
+    """https://www.uniprot.org/help/api_idmapping"""
+
+    if isinstance(query, str):
+        query = [query]
+    query = ' '.join(query)
+
+    url = 'https://www.uniprot.org/uploadlists/'
+    params = {
+            'from': source,
+            'to': target,
+            'format': 'tab',
+            'query': query,
+            }
+    data = urllib.parse.urlencode(params)
+    data = data.encode('utf-8')
+    req = urllib.request.Request(url, data)
+    with urllib.request.urlopen(req) as f:
+        response = f.read()
+    content = response.decode('utf-8')
+
+    import csv
+    import io
+    buffer = io.StringIO(content)
+    reader = csv.reader(buffer, delimiter='\t')
+    next(reader)
+    ret = [tuple(row) for row in reader]
+    buffer.close()
+    return ret
 
 class UniProtDataSourceBase(rdf.RDFDataSourceBase):
 
@@ -220,6 +252,10 @@ class UniProtDataSource(UniProtDataSourceBase):
         entity_id = cls.parse_entity(entity)
         assert entity_id is not None
         return 'http://www.uniprot.org/uniprot/{}'.format(entity_id)
+
+    @property
+    def identifier(self):
+        return self.parse_entity(self.url)
 
     def mnemonic(self):
         return [str(obj) for obj in self.graph.objects(predicate=self.UNIPROT.mnemonic)]  #XXX: Specify its subject
