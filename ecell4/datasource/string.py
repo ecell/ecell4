@@ -5,6 +5,10 @@ import requests
 
 
 class StringDataSource:
+    """
+    See http://string-db.org/cgi/help.pl
+
+    """
 
     wait = 1.0
 
