@@ -363,7 +363,7 @@ class Session(object):
             }]
 
         from ..extra.ensemble import run_ensemble
-        results = run_ensemble(singlerun, jobs, repeat=repeat, nproc=nproc, **kwargs)
+        results = run_ensemble(singlerun, jobs, repeat=repeat, nproc=nproc, method=method, **kwargs)
 
         assert len(results) == len(jobs) == 1
         assert len(results[0]) == repeat
