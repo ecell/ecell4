@@ -176,6 +176,14 @@ class Result(object):
         self.world = world
         self.observers = state[1]
 
+    def _ipython_display_(self):
+        """
+        Displays the object as a side effect.
+        https://ipython.readthedocs.io/en/stable/config/integrating.html
+
+        """
+        self.plot()
+
 class Session(object):
 
     def __init__(self, model=None, y0=None, structures=None, volume=1.0):

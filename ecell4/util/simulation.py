@@ -11,7 +11,7 @@ from .session import load_world
 def run_simulation(
         t, y0=None, volume=1.0, model=None, solver='ode',
         is_netfree=False, species_list=None, without_reset=False,
-        return_type='matplotlib', opt_args=(), opt_kwargs=None,
+        return_type=None, opt_args=(), opt_kwargs=None,
         structures=None, observers=(), progressbar=0, rndseed=None,
         factory=None, ## deprecated
         **kwargs):
@@ -39,9 +39,9 @@ def run_simulation(
         A list of names of Species observed. If None, log all.
         Default is None.
     return_type : str, optional
-        Choose a type of return value from 'array', 'observer',
+        Choose a type of return value from 'default', 'array', 'observer',
         'matplotlib', 'nyaplot', 'world', 'dataframe', 'none' or None.
-        If None or 'none', return and plot nothing. Default is 'matplotlib'.
+        If 'none', return and plot nothing. Default is 'default'.
         'dataframe' requires numpy and pandas libraries.
         Keyword 'r' is a shortcut for specifying 'return_type'.
     opt_args: list, tuple or dict, optional
@@ -70,6 +70,7 @@ def run_simulation(
     -------
     value : list, TimingNumberObserver, World or None
         Return a value suggested by ``return_type``.
+        When ``return_type`` is 'default' return a Result object.
         When ``return_type`` is 'array', return a time course data.
         When ``return_type`` is 'observer', return an observer.
         When ``return_type`` is 'world', return the last state of ``World``.
@@ -93,7 +94,9 @@ def run_simulation(
     session = Session(model=model, y0=y0, structures=structures, volume=volume)
     ret = session.run(t, solver=solver, rndseed=rndseed, ndiv=None, species_list=species_list, observers=observers)
 
-    if return_type in ('matplotlib', 'm'):
+    if return_type is None or return_type == "default":
+        return ret
+    elif return_type in ('matplotlib', 'm'):
         if isinstance(opt_args, (list, tuple)):
             ret.plot(*opt_args, **opt_kwargs)
         elif isinstance(opt_args, dict):
@@ -119,7 +122,7 @@ def run_simulation(
         return ret.as_df()
     elif return_type in ('world', 'w'):
         return ret.world
-    elif return_type is None or return_type in ('none', ):
+    elif return_type in ('none', ):
         return
     else:
         raise ValueError(
