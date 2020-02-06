@@ -155,7 +155,7 @@ def plot_number_observer(
             legend_opts.update(kwargs["legend"])
         ax.legend(*ax.get_legend_handles_labels(), **legend_opts)
 
-    if "xlabel" is not None:
+    if xlabel is not None:
         ax.set_xlabel(xlabel)
     elif "x" in kwargs.keys():
         ax.set_xlabel("The Number of Molecules [{0}]".format(kwargs["x"]))
@@ -163,12 +163,12 @@ def plot_number_observer(
         ax.set_xlabel("Time")
     ax.set_ylabel(ylabel)
 
-    if "xlim" is not None:
+    if xlim is not None:
         ax.set_xlim(xlim)
-    if "ylim" is not None:
+    if ylim is not None:
         ax.set_ylim(ylim)
 
-    if "filename" is not None:
+    if filename is not None:
         plt.savefig(filename)
     else:
         plt.show()
