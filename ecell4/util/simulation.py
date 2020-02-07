@@ -21,7 +21,7 @@ def load_world(filename):
     -------
     w : World
         Return one from ``BDWorld``, ``EGFRDWorld``, ``MesoscopicWorld``,
-        ``ODEWorld``, ``GillespieWorld`` and ``SpatiocyteWorld``.
+        ``ODEWorld``, ``GillespieWorld``, ``SpatiocyteWorld`` and ``SGFRDWorld``.
 
     """
     import ecell4_base
@@ -39,6 +39,8 @@ def load_world(filename):
         return ecell4_base.gillespie.World(filename)
     elif vinfo.startswith("ecell4-spatiocyte"):
         return ecell4_base.spatiocyte.World(filename)
+    elif vinfo.startswith("ecell4-sgfrd"):
+        return ecell4_base.sgfrd.World(filename)
     elif vinfo == "":
         raise RuntimeError("No version information was found in [{0}]".format(filename))
     raise RuntimeError("Unknown version information [{0}]".format(vinfo))
@@ -58,6 +60,8 @@ def get_factory(solver, *args):
         return ecell4_base.bd.Factory(*args)
     elif solver == 'egfrd':
         return ecell4_base.egfrd.Factory(*args)
+    elif solver == 'sgfrd':
+        return ecell4_base.sgfrd.Factory(*args)
     else:
         raise ValueError(
             'unknown solver name was given: ' + repr(solver)
@@ -116,7 +120,7 @@ def run_simulation(
         Keyword 'm' is a shortcut for specifying 'model'.
     solver : str, tuple or Factory, optional
         Solver type. Choose one from 'ode', 'gillespie', 'spatiocyte', 'meso',
-        'bd' and 'egfrd'. Default is 'ode'.
+        'bd', 'egfrd', and 'sgfrd'. Default is 'ode'.
         When tuple is given, the first value must be str as explained above.
         All the rest is used as arguments for the corresponding factory class.
         Keyword 's' is a shortcut for specifying 'solver'.
