@@ -20,15 +20,20 @@ __all__ = [
     ]
 
 
-def plot_number_observer(*args, **kwargs):
+def plot_number_observer(
+        *args, xlim=None, ylim=None, x=None, y=None, xlabel=None, ylabel="The Number of Molecules",
+        step=None, legend=False, filename=None, **kwargs):
     """
     Generate a plot from NumberObservers and show it on IPython notebook
     with matplotlib.
+    Require matplotlib and numpy.
 
     Parameters
     ----------
     obs : NumberObserver (e.g. FixedIntervalNumberObserver)
     fmt : str, optional
+    step : bool, optional
+        Piece-wise constant curve. False for default.
 
     Examples
     --------
@@ -38,17 +43,13 @@ def plot_number_observer(*args, **kwargs):
     >>> plot_number_observer(obs1, '-', obs2, '--')
     >>> plot_number_observer(obs1, '-', lambda t: 30, '--')
 
-
     """
-    import matplotlib.pylab as plt
     import numpy
-    import collections
+    import matplotlib.pylab as plt
 
-    special_keys = ("xlim", "ylim", "xlabel", "ylabel", "legend", "x", "y", "filename", "step")
-    plot_opts = {key: value for key, value in kwargs.items()
-                 if key not in special_keys}
+    x_key, y_keys = x, y
+    plot_opts = kwargs
 
-    step = kwargs.get('step', None)
     if step is True:
         step = 'post'
 
@@ -57,8 +58,8 @@ def plot_number_observer(*args, **kwargs):
     else:
         color_cycle = plt.rcParams['axes.color_cycle']
 
-    if "y" in kwargs.keys() and isinstance(kwargs["y"], str):
-        kwargs["y"] = (kwargs["y"], )
+    if y_keys is not None and isinstance(y_keys, str):
+        y_keys = (y_keys, )
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -99,18 +100,18 @@ def plot_number_observer(*args, **kwargs):
         except AttributeError:
             err = None
 
-        if "x" in kwargs.keys():
+        if x_key is not None:
             targets = [sp.serial() for sp in obs.targets()]
-            if kwargs["x"] not in targets:
-                raise ValueError("[{0}] given as 'x' was not found.".fomrat(kwargs["x"]))
-            xidx = targets.index(kwargs["x"]) + 1
+            if x_key not in targets:
+                raise ValueError("[{0}] given as 'x' was not found.".fomrat(x_key))
+            xidx = targets.index(x_key) + 1
         else:
             xidx = 0
 
-        if "y" in kwargs.keys():
+        if y_keys is not None:
             targets = [sp.serial() for sp in obs.targets()]
             targets = [(targets.index(serial), serial)
-                       for serial in kwargs["y"] if serial in targets]
+                       for serial in y_keys if serial in targets]
         else:
             targets = [sp.serial() for sp in obs.targets()]
             targets = list(enumerate(targets))
@@ -128,7 +129,7 @@ def plot_number_observer(*args, **kwargs):
             opts["color"] = color_map[label]
 
             if err is None:
-                if step is None:
+                if step is None or step is False:
                     if fmt is None:
                         ax.plot(data[xidx], data[idx + 1], **opts)
                     else:
@@ -148,31 +149,27 @@ def plot_number_observer(*args, **kwargs):
                         xerr=(None if xidx == 0 else err[xidx]), yerr=err[idx + 1],
                         fmt=fmt, **opts)
 
-    # if "legend" not in kwargs.keys() or kwargs["legend"]:
-    #     ax.legend(*ax.get_legend_handles_labels(), loc="best", shadow=True)
-    if "legend" not in kwargs.keys() or (kwargs["legend"] is not None and kwargs["legend"] is not False):
+    if legend is not False:
         legend_opts = {"loc": "best", "shadow": True}
-        if "legend" in kwargs and isinstance(kwargs["legend"], dict):
+        if isinstance(kwargs["legend"], dict):
             legend_opts.update(kwargs["legend"])
         ax.legend(*ax.get_legend_handles_labels(), **legend_opts)
 
-    if "xlabel" in kwargs.keys():
-        ax.set_xlabel(kwargs["xlabel"])
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
     elif "x" in kwargs.keys():
         ax.set_xlabel("The Number of Molecules [{0}]".format(kwargs["x"]))
     else:
         ax.set_xlabel("Time")
-    if "ylabel" in kwargs.keys():
-        ax.set_ylabel(kwargs["ylabel"])
-    else:
-        ax.set_ylabel("The Number of Molecules")
-    if "xlim" in kwargs.keys():
-        ax.set_xlim(kwargs["xlim"])
-    if "ylim" in kwargs.keys():
-        ax.set_ylim(kwargs["ylim"])
+    ax.set_ylabel(ylabel)
 
-    if "filename" in kwargs.keys():
-        plt.savefig(kwargs["filename"])
+    if xlim is not None:
+        ax.set_xlim(xlim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
+    if filename is not None:
+        plt.savefig(filename)
     else:
         plt.show()
 
