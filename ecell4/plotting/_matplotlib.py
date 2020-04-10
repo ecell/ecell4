@@ -74,12 +74,12 @@ def plot_number_observer(
         observers = [(obs, None) for obs in args]
 
     color_map = {}
-    data, xidx = None, 0
+    data, xdata, xerr = None, None, None
     for obs, fmt in observers:
         if isinstance(obs, types.FunctionType):
-            if data is None:
+            if xdata is None:
                 raise ValueError("A function must be given after an observer.")
-            y = [obs(xi) for xi in data[xidx]]
+            y = [obs(xi) for xi in xdata]
             opts = plot_opts.copy()
             label = obs.__name__
             opts["label"] = label
@@ -88,11 +88,12 @@ def plot_number_observer(
                 opts["label"] = label
             opts["color"] = color_map[label]
             if fmt is None:
-                ax.plot(data[xidx], y, **opts)
+                ax.plot(xdata, y, **opts)
             else:
-                ax.plot(data[xidx], y, fmt, **opts)
+                ax.plot(xdata, y, fmt, **opts)
             continue
 
+        targets = [sp.serial() for sp in obs.targets()]
         data = numpy.array(obs.data()).T
 
         try:
@@ -101,26 +102,47 @@ def plot_number_observer(
             err = None
 
         if x_key is not None:
-            targets = [sp.serial() for sp in obs.targets()]
             if x_key not in targets:
-                raise ValueError("[{0}] given as 'x' was not found.".fomrat(x_key))
-            xidx = targets.index(x_key) + 1
+                try:
+                    xdata = eval(x_key, {"__builtins__": None},
+                            {serial: data[idx + 1] for idx, serial in enumerate(targets)})
+                except:
+                    raise ValueError("[{0}] given as 'x' was not found.".format(x_key))
+                xerr = None
+            else:
+                xidx = targets.index(x_key) + 1
+                xdata = data[xidx]
+                xerr = err[xidx] if err is not None else None
         else:
             xidx = 0
+            xdata = data[xidx]
+            xerr = None
 
         if y_keys is not None:
-            targets = [sp.serial() for sp in obs.targets()]
-            targets = [(targets.index(serial), serial)
-                       for serial in y_keys if serial in targets]
+            targets_ = []
+            for serial in y_keys:
+                if serial in targets:
+                    idx = targets.index(serial)
+                    if err is not None:
+                        targets_.append((serial, data[idx + 1], err[idx + 1]))
+                    else:
+                        targets_.append((serial, data[idx + 1], None))
+                else:
+                    try:
+                        data_ = eval(serial, {"__builtins__": None},
+                                {serial: data[idx + 1] for idx, serial in enumerate(targets)})
+                    except:
+                        raise ValueError("[{0}] given as 'y' was not found.".format(serial))
+                    targets_.append((serial, data_, None))
         else:
-            targets = [sp.serial() for sp in obs.targets()]
-            targets = list(enumerate(targets))
-            # targets.sort(key=lambda x: x[1])
+            if err is not None:
+                targets_ = [(serial, data[idx + 1], err[idx + 1]) for idx, serial in enumerate(targets)]
+            else:
+                targets_ = [(serial, data[idx + 1], None) for idx, serial in enumerate(targets)]
 
-        for idx, serial in targets:
+        for label, data_, err_ in targets_:
             opts = plot_opts.copy()
 
-            label = serial
             if len(label) > 0 and label[0] == '_':
                 label = '$\_$' + label[1:]  # XXX: lazy escaping for a special character
             if label not in color_map.keys():
@@ -128,30 +150,26 @@ def plot_number_observer(
                 opts["label"] = label
             opts["color"] = color_map[label]
 
-            if err is None:
+            if err_ is None:
                 if step is None or step is False:
                     if fmt is None:
-                        ax.plot(data[xidx], data[idx + 1], **opts)
+                        ax.plot(xdata, data_, **opts)
                     else:
-                        ax.plot(data[xidx], data[idx + 1], fmt, **opts)
+                        ax.plot(xdata, data_, fmt, **opts)
                 else:
                     if fmt is None:
-                        ax.step(data[xidx], data[idx + 1], where=step, **opts)
+                        ax.step(xdata, data_, where=step, **opts)
                     else:
-                        ax.step(data[xidx], data[idx + 1], fmt, where=step, **opts)
+                        ax.step(xdata, data_, fmt, where=step, **opts)
             else:
                 if fmt is None:
-                    ax.errorbar(data[xidx], data[idx + 1],
-                        xerr=(None if xidx == 0 else err[xidx]), yerr=err[idx + 1],
-                        **opts)
+                    ax.errorbar(xdata, data_, xerr=xerr, yerr=err_, **opts)
                 else:
-                    ax.errorbar(data[xidx], data[idx + 1],
-                        xerr=(None if xidx == 0 else err[xidx]), yerr=err[idx + 1],
-                        fmt=fmt, **opts)
+                    ax.errorbar(xdata, data_, xerr=xerr, yerr=err_, fmt=fmt, **opts)
 
     if legend is not False:
         legend_opts = {"loc": "best", "shadow": True}
-        if isinstance(kwargs["legend"], dict):
+        if isinstance(legend, dict):
             legend_opts.update(kwargs["legend"])
         ax.legend(*ax.get_legend_handles_labels(), **legend_opts)
 
