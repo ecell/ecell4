@@ -6,7 +6,6 @@ from ..util.session import load_world
 from .styles import default_color_scale, matplotlib_color_scale
 from ._core import get_range_of_world, get_range_of_trajectories, eval_key
 
-
 __all__ = [
     "plot_number_observer_with_matplotlib",
     "plot_world_with_matplotlib",
