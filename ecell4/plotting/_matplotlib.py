@@ -4,7 +4,7 @@ import random
 
 from ..util.session import load_world
 from .styles import default_color_scale, matplotlib_color_scale
-from ._core import get_range_of_world, get_range_of_trajectories
+from ._core import get_range_of_world, get_range_of_trajectories, eval_key
 
 
 __all__ = [
@@ -102,17 +102,7 @@ def plot_number_observer(
             err = None
 
         if x_key is not None:
-            if x_key not in targets:
-                try:
-                    xdata = eval(x_key, {"__builtins__": None},
-                            {serial: data[idx + 1] for idx, serial in enumerate(targets)})
-                except:
-                    raise ValueError("[{0}] given as 'x' was not found.".format(x_key))
-                xerr = None
-            else:
-                xidx = targets.index(x_key) + 1
-                xdata = data[xidx]
-                xerr = err[xidx] if err is not None else None
+            xdata, xerr = eval_key(x_key, targets, data, err)
         else:
             xidx = 0
             xdata = data[xidx]
@@ -121,19 +111,8 @@ def plot_number_observer(
         if y_keys is not None:
             targets_ = []
             for serial in y_keys:
-                if serial in targets:
-                    idx = targets.index(serial)
-                    if err is not None:
-                        targets_.append((serial, data[idx + 1], err[idx + 1]))
-                    else:
-                        targets_.append((serial, data[idx + 1], None))
-                else:
-                    try:
-                        data_ = eval(serial, {"__builtins__": None},
-                                {serial: data[idx + 1] for idx, serial in enumerate(targets)})
-                    except:
-                        raise ValueError("[{0}] given as 'y' was not found.".format(serial))
-                    targets_.append((serial, data_, None))
+                data_, err_ = eval_key(serial, targets, data, err)
+                targets_.append((serial, data_, err_))
         else:
             if err is not None:
                 targets_ = [(serial, data[idx + 1], err[idx + 1]) for idx, serial in enumerate(targets)]

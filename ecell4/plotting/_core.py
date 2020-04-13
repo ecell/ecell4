@@ -69,3 +69,28 @@ def get_range_of_trajectories(data, plot_range=None):
             'plot_range must be list, tuple or dict. [{}] was given.'.format(
                 repr(plot_range)))
 
+def eval_key(observable, targets, data, err=None):
+    assert len(data) == len(targets) + 1
+    assert err is None or len(err) == len(data)
+
+    if observable in targets:
+        idx = targets.index(observable) + 1
+        data_ = data[idx]
+        err_ = err[idx] if err is not None else None
+    else:
+        err_ = None
+        import numpy
+        locals_ = {
+            'sqrt': numpy.sqrt, 'cbrt': numpy.cbrt, 'square': numpy.square, 'abs': numpy.fabs,
+            'max': numpy.fmax, 'min': numpy.fmin, 'exp': numpy.exp, 'log': numpy.log,
+            'pow': numpy.power, 'sin': numpy.sin, 'cos': numpy.cos, 'tan': numpy.tan,
+            }
+        try:
+            data_ = eval(observable, {"__builtins__": None},
+                    dict(locals_, **{serial: data[idx + 1] for idx, serial in enumerate(targets)}))
+            # if err is not None:
+            #     err_ = eval(observable, {"__builtins__": None},
+            #             dict(locals_, **{serial: err[idx + 1] for idx, serial in enumerate(targets)}))
+        except:
+            raise ValueError("Unknown variable [{0}] was given.".format(observable))
+    return (data_, err_)
