@@ -15,7 +15,7 @@ from .styles import default_color_scale, attractive_mpl_color_scale
 from ._core import get_range_of_world, get_range_of_trajectories
 
 from . import _matplotlib, _plotly, _elegans
-default = _matplotlib
+BACKEND = _matplotlib
 
 
 def __on_ipython_notebook():
@@ -53,7 +53,7 @@ def plot_number_observer(*args, backend=None, **kwargs):
     elif backend == 'elegans':
         _elegans.plot_number_observer(*args, **kwargs)
     else:
-        default.plot_number_observer(*args, **kwargs)
+        BACKEND.plot_number_observer(*args, **kwargs)
 
 def plot_world(*args, backend=None, **kwargs):
     """
@@ -80,7 +80,7 @@ def plot_world(*args, backend=None, **kwargs):
     elif backend == 'elegans':
         _elegans.plot_world(*args, **kwargs)
     else:
-        default.plot_world(*args, **kwargs)
+        BACKEND.plot_world(*args, **kwargs)
 
 def plot_movie(*args, backend=None, **kwargs):
     """
@@ -100,7 +100,7 @@ def plot_movie(*args, backend=None, **kwargs):
     elif backend == 'elegans':
         _elegans.plot_movie(*args, **kwargs)
     else:
-        default.plot_movie(*args, **kwargs)
+        BACKEND.plot_movie(*args, **kwargs)
 
 def plot_trajectory(*args, backend=None, **kwargs):
     """
@@ -124,7 +124,7 @@ def plot_trajectory(*args, backend=None, **kwargs):
     elif backend == 'elegans':
         _elegans.plot_trajectory(*args, **kwargs)
     else:
-        default.plot_trajectory(*args, **kwargs)
+        BACKEND.plot_trajectory(*args, **kwargs)
 
 plot_movie_of_trajectory = _matplotlib.plot_movie_of_trajectory_with_matplotlib  # default
 
