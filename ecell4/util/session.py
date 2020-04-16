@@ -1,5 +1,5 @@
 import copy
-import collections
+import collections.abc
 import numbers
 import tempfile
 import os
@@ -241,11 +241,12 @@ class Session(object):
             The result object
 
         """
-        t = get_value(t, ((numbers.Real, '[time]'), ))
+        import numpy
+        t = get_value(t, ((numbers.Real, '[time]'), (collections.abc.Iterable, '[time]')))
 
         if isinstance(solver, str):
             f = get_factory(solver)
-        elif isinstance(solver, collections.Iterable):
+        elif isinstance(solver, collections.abc.Iterable):
             f = get_factory(*solver)
         else:
             f = solver  # solver is a Factory
@@ -261,7 +262,7 @@ class Session(object):
         for (name, shape) in self.structures.items():
             if isinstance(shape, str):
                 w.add_structure(ecell4_base.core.Species(name), get_shape(shape))
-            elif isinstance(shape, collections.Iterable):
+            elif isinstance(shape, collections.abc.Iterable):
                 w.add_structure(ecell4_base.core.Species(name), get_shape(*shape))
             else:
                 w.add_structure(ecell4_base.core.Species(name), shape)  # shape is a Shape
@@ -269,15 +270,15 @@ class Session(object):
         #XXX: y0 may accept [concentration].
         if isinstance(w, ecell4_base.ode.ODEWorld):
             for serial, n in self.y0.items():
-                w.set_value(ecell4_base.core.Species(serial), n)
+                w.set_value(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), n)
         else:
             for serial, n in self.y0.items():
-                w.add_molecules(ecell4_base.core.Species(serial), n)
+                w.add_molecules(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), n)
 
         if isinstance(w, ecell4_base.ode.ODEWorld):
             ndiv = ndiv or 100
 
-        if isinstance(t, collections.Iterable):
+        if isinstance(t, collections.abc.Iterable):
             upto = t[-1]
             if species_list is None:
                 obs = ecell4_base.core.TimingNumberObserver(t)
@@ -298,7 +299,7 @@ class Session(object):
             else:
                 obs = ecell4_base.core.NumberObserver(species_list)
 
-        if not isinstance(observers, collections.Iterable):
+        if not isinstance(observers, collections.abc.Iterable):
             observers = (observers, )
         observers = (obs, ) + tuple(observers)
 

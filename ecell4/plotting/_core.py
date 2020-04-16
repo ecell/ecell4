@@ -69,3 +69,40 @@ def get_range_of_trajectories(data, plot_range=None):
             'plot_range must be list, tuple or dict. [{}] was given.'.format(
                 repr(plot_range)))
 
+from ..util.model_parser import Visitor, dispatch, RATELAW_RESERVED_FUNCTIONS, RATELAW_RESERVED_CONSTANTS
+import ecell4_base
+
+class EvalVisitor(Visitor):
+
+    def __init__(self, variables):
+        self.variables = variables
+
+    def visit_const(self, obj):
+        if str(obj) not in RATELAW_RESERVED_CONSTANTS:
+            raise ValueError()
+        return RATELAW_RESERVED_CONSTANTS[str(obj)]
+
+    def visit_species(self, obj):
+        pttrn = ecell4_base.core.Species(str(obj))
+        return sum(ecell4_base.core.count_species_matches(pttrn, key) * value for key, value in self.variables.items())
+
+    def visit_func(self, obj, *args):
+        print(obj)
+        assert obj._elems[0].name in RATELAW_RESERVED_FUNCTIONS
+        return RATELAW_RESERVED_FUNCTIONS[obj._elems[0].name](*args)
+
+    def visit_expression(self, obj, *args):
+        return obj._execute(*args)
+
+def eval_key(observable, targets, data, err=None):
+    assert len(data) == len(targets) + 1
+    assert err is None or len(err) == len(data)
+
+    from ecell4.util.decorator_base import just_parse
+    parsed = just_parse().eval(observable)
+
+    import numpy
+    variables = dict(zip(targets, data[1: ]))
+
+    #XXX: The second return value is for standard deviations (err)
+    return (dispatch(parsed, EvalVisitor(variables)), None)

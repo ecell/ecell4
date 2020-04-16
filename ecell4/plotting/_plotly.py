@@ -3,6 +3,7 @@ import types
 
 from ..util.session import load_world
 
+from ._core import eval_key
 from .styles import plotly_color_scale
 
 __all__ = [
@@ -11,7 +12,8 @@ __all__ = [
     ]
 
 
-def plot_number_observer(*args, step=False, layout=None, **kwargs):
+def plot_number_observer(
+        *args, x=None, y=None, step=False, layout=None, **kwargs):
     """
     Generate a plot from NumberObservers and show it on IPython notebook
     with plotly.
@@ -37,35 +39,58 @@ def plot_number_observer(*args, step=False, layout=None, **kwargs):
     import plotly
     import plotly.graph_objs as go
 
+    x_key, y_keys = x, y
+
     color_scale = plotly_color_scale()
+
+    if y_keys is not None and isinstance(y_keys, str):
+        y_keys = (y_keys, )
 
     plotly.offline.init_notebook_mode()
     fig = go.Figure()
 
-    data = None
-    xidx = 0
+    data, xdata = None, None
     for obs in args:
         if isinstance(obs, types.FunctionType):
-            if data is None:
+            if xdata is None:
                 raise ValueError("A function must be given after an observer.")
-            y = [obs(xi) for xi in data[xidx]]
+            y = [obs(xi) for xi in xdata]
             label = obs.__name__
             showlegend = (label not in color_scale.get_config())
-            trace = go.Scatter(x=data[xidx], y=y, name=label, line_color=color_scale.get_color(label), legendgroup=label, showlegend=showlegend)
+            trace = go.Scatter(
+                    x=xdata, y=y, name=label, line_color=color_scale.get_color(label),
+                    legendgroup=label, showlegend=showlegend)
             fig.add_trace(trace)
             continue
 
         data = numpy.array(obs.data()).T
 
-        targets = [sp.serial() for sp in obs.targets()]
-        targets = list(enumerate(targets))
+        if x_key is not None:
+            xdata, _ = eval_key(x_key, obs.targets(), data)
+        else:
+            xdata = data[0]
 
-        for idx, serial in targets:
-            showlegend = (serial not in color_scale.get_config())
-            trace = go.Scatter(x=data[xidx], y=data[idx + 1], name=serial, line_shape=('linear' if not step else 'hv'), line_color=color_scale.get_color(serial), legendgroup=serial, showlegend=showlegend)
+        if y_keys is not None:
+            targets_ = []
+            for serial in y_keys:
+                data_, err_ = eval_key(serial, obs.targets(), data)
+                targets_.append((serial, data_, err_))
+        else:
+            targets_ = [(sp.serial(), data[idx + 1], None) for idx, sp in enumerate(obs.targets())]
+
+        for label, data_, _ in targets_:
+            showlegend = (label not in color_scale.get_config())
+            trace = go.Scatter(
+                    x=xdata, y=data_, name=label, line_shape=('linear' if not step else 'hv'),
+                    line_color=color_scale.get_color(label), legendgroup=label,
+                    showlegend=showlegend)
             fig.add_trace(trace)
 
-    layout_ = dict(xaxis_title='Time', yaxis_title='The Number of Molecules')
+    if x_key is not None:
+        xaxis_title = 'The Number of Molecules [{}]'.format(x_key)
+    else:
+        xaxis_title = 'Time'
+    layout_ = dict(xaxis_title=xaxis_title, yaxis_title="The Number of Molecules")
     if layout is not None:
         layout_.update(layout)
     fig.update(dict(layout=layout_))
