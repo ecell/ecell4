@@ -92,7 +92,6 @@ def plot_number_observer(
                 ax.plot(xdata, y, fmt, **opts)
             continue
 
-        targets = [sp.serial() for sp in obs.targets()]
         data = numpy.array(obs.data()).T
 
         try:
@@ -101,7 +100,7 @@ def plot_number_observer(
             err = None
 
         if x_key is not None:
-            xdata, xerr = eval_key(x_key, targets, data, err)
+            xdata, xerr = eval_key(x_key, obs.targets(), data, err)
         else:
             xidx = 0
             xdata = data[xidx]
@@ -110,13 +109,13 @@ def plot_number_observer(
         if y_keys is not None:
             targets_ = []
             for serial in y_keys:
-                data_, err_ = eval_key(serial, targets, data, err)
+                data_, err_ = eval_key(serial, obs.targets(), data, err)
                 targets_.append((serial, data_, err_))
         else:
             if err is not None:
-                targets_ = [(serial, data[idx + 1], err[idx + 1]) for idx, serial in enumerate(targets)]
+                targets_ = [(sp.serial(), data[idx + 1], err[idx + 1]) for idx, sp in enumerate(obs.targets())]
             else:
-                targets_ = [(serial, data[idx + 1], None) for idx, serial in enumerate(targets)]
+                targets_ = [(sp.serial(), data[idx + 1], None) for idx, sp in enumerate(obs.targets())]
 
         for label, data_, err_ in targets_:
             opts = plot_opts.copy()

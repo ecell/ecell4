@@ -69,28 +69,40 @@ def get_range_of_trajectories(data, plot_range=None):
             'plot_range must be list, tuple or dict. [{}] was given.'.format(
                 repr(plot_range)))
 
+from ..util.model_parser import Visitor, dispatch, RATELAW_RESERVED_FUNCTIONS, RATELAW_RESERVED_CONSTANTS
+import ecell4_base
+
+class EvalVisitor(Visitor):
+
+    def __init__(self, variables):
+        self.variables = variables
+
+    def visit_const(self, obj):
+        if str(obj) not in RATELAW_RESERVED_CONSTANTS:
+            raise ValueError()
+        return RATELAW_RESERVED_CONSTANTS[str(obj)]
+
+    def visit_species(self, obj):
+        pttrn = ecell4_base.core.Species(str(obj))
+        return sum(ecell4_base.core.count_species_matches(pttrn, key) * value for key, value in self.variables.items())
+
+    def visit_func(self, obj, *args):
+        print(obj)
+        assert obj._elems[0].name in RATELAW_RESERVED_FUNCTIONS
+        return RATELAW_RESERVED_FUNCTIONS[obj._elems[0].name](*args)
+
+    def visit_expression(self, obj, *args):
+        return obj._execute(*args)
+
 def eval_key(observable, targets, data, err=None):
     assert len(data) == len(targets) + 1
     assert err is None or len(err) == len(data)
 
-    if observable in targets:
-        idx = targets.index(observable) + 1
-        data_ = data[idx]
-        err_ = err[idx] if err is not None else None
-    else:
-        err_ = None
-        import numpy
-        locals_ = {
-            'sqrt': numpy.sqrt, 'cbrt': numpy.cbrt, 'square': numpy.square, 'abs': numpy.fabs,
-            'max': numpy.fmax, 'min': numpy.fmin, 'exp': numpy.exp, 'log': numpy.log,
-            'pow': numpy.power, 'sin': numpy.sin, 'cos': numpy.cos, 'tan': numpy.tan,
-            }
-        try:
-            data_ = eval(observable, {"__builtins__": None},
-                    dict(locals_, **{serial: data[idx + 1] for idx, serial in enumerate(targets)}))
-            # if err is not None:
-            #     err_ = eval(observable, {"__builtins__": None},
-            #             dict(locals_, **{serial: err[idx + 1] for idx, serial in enumerate(targets)}))
-        except:
-            raise ValueError("Unknown variable [{0}] was given.".format(observable))
-    return (data_, err_)
+    from ecell4.util.decorator_base import just_parse
+    parsed = just_parse().eval(observable)
+
+    import numpy
+    variables = dict(zip(targets, data[1: ]))
+
+    #XXX: The second return value is for standard deviations (err)
+    return (dispatch(parsed, EvalVisitor(variables)), None)

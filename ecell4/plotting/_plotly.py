@@ -64,20 +64,19 @@ def plot_number_observer(
             continue
 
         data = numpy.array(obs.data()).T
-        targets = [sp.serial() for sp in obs.targets()]
 
         if x_key is not None:
-            xdata, _ = eval_key(x_key, targets, data)
+            xdata, _ = eval_key(x_key, obs.targets(), data)
         else:
             xdata = data[0]
 
         if y_keys is not None:
             targets_ = []
             for serial in y_keys:
-                data_, err_ = eval_key(serial, targets, data)
+                data_, err_ = eval_key(serial, obs.targets(), data)
                 targets_.append((serial, data_, err_))
         else:
-            targets_ = [(serial, data[idx + 1], None) for idx, serial in enumerate(targets)]
+            targets_ = [(sp.serial(), data[idx + 1], None) for idx, sp in enumerate(obs.targets())]
 
         for label, data_, _ in targets_:
             showlegend = (label not in color_scale.get_config())

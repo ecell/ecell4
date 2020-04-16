@@ -179,6 +179,10 @@ class ExpBase(object):
     def __init__(self, root):
         self.__root = root
 
+    def _execute(self, *args):
+        raise NotImplementedError(
+            "{} doesn't support _execute".format(repr(self)))
+
     @property
     def _root(self):
         return self.__root
@@ -442,6 +446,12 @@ class PosExp(UnaryExp):
     def __deepcopy__(self, memo):
         return PosExp(self._root, copy.deepcopy(self._target))
 
+    def _execute(self, *args):
+        if len(args) != 1:
+            raise ValueError(
+                "The number of arguments must be 1. {} is given.".format(len(args)))
+        return +args[0]
+
 class NegExp(UnaryExp):
 
     def __init__(self, root, target):
@@ -449,6 +459,12 @@ class NegExp(UnaryExp):
 
     def __deepcopy__(self, memo):
         return NegExp(self._root, copy.deepcopy(self._target))
+
+    def _execute(self, *args):
+        if len(args) != 1:
+            raise ValueError(
+                "The number of arguments must be 1. {} is given.".format(len(args)))
+        return -args[0]
 
 class AddExp(ExpBase):
 
@@ -478,6 +494,12 @@ class AddExp(ExpBase):
         retval._elems = copy.deepcopy(self._elems)
         return retval
 
+    def _execute(self, *args):
+        if len(args) < 2:
+            raise ValueError(
+                "The number of arguments must be more than 1. {} is given.".format(len(args)))
+        return sum(args)
+
 class SubExp(ExpBase):
 
     def __init__(self, root, lhs, rhs):
@@ -505,6 +527,12 @@ class SubExp(ExpBase):
         retval = SubExp(self._root, None, None)
         retval._elems = copy.deepcopy(self._elems)
         return retval
+
+    def _execute(self, *args):
+        if len(args) != 2:
+            raise ValueError(
+                "The number of arguments must be 2. {} is given.".format(len(args)))
+        return args[0] - args[1]
 
 class DivExp(ExpBase):
 
@@ -534,6 +562,12 @@ class DivExp(ExpBase):
         retval._elems = copy.deepcopy(self._elems)
         return retval
 
+    def _execute(self, *args):
+        if len(args) != 2:
+            raise ValueError(
+                "The number of arguments must be 2. {} is given.".format(len(args)))
+        return args[0] / args[1]
+
 class MulExp(ExpBase):
 
     def __init__(self, root, lhs, rhs):
@@ -561,6 +595,12 @@ class MulExp(ExpBase):
         retval = MulExp(self._root, None, None)
         retval._elems = copy.deepcopy(self._elems)
         return retval
+
+    def _execute(self, *args):
+        if len(args) != 2:
+            raise ValueError(
+                "The number of arguments must be 2. {} is given.".format(len(args)))
+        return args[0] * args[1]
 
 # class LshiftExp(ExpBase):
 # 
@@ -610,6 +650,12 @@ class PowExp(ExpBase):
         retval = PowExp(self._root, None, None)
         retval._elems = copy.deepcopy(self._elems)
         return retval
+
+    def _execute(self, *args):
+        if len(args) != 2:
+            raise ValueError(
+                "The number of arguments must be 2. {} is given.".format(len(args)))
+        return args[0] ** args[1]
 
 class OrExp(ExpBase):
 

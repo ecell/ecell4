@@ -11,12 +11,21 @@ from ..extra import unit
 
 import ecell4_base.core
 
-RATELAW_RESERVED_FUNCTIONS = {
-    'pow': pow, 'exp': math.exp, 'log': math.log,
-    'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
-    'asin': math.asin, 'acos': math.acos, 'atan': math.atan,
-    'abs': abs,
-    }
+try:
+    import numpy
+    RATELAW_RESERVED_FUNCTIONS = {
+        'pow': numpy.power, 'exp': numpy.exp, 'log': numpy.log,
+        'sin': numpy.sin, 'cos': numpy.cos, 'tan': numpy.tan,
+        'asin': numpy.arcsin, 'acos': numpy.arccos, 'atan': numpy.arctan,
+        'abs': numpy.fabs, 'sqrt': numpy.sqrt,
+        }
+except ImportError:
+    RATELAW_RESERVED_FUNCTIONS = {
+        'pow': pow, 'exp': math.exp, 'log': math.log,
+        'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
+        'asin': math.asin, 'acos': math.acos, 'atan': math.atan,
+        'abs': abs, 'sqrt': math.sqrt,
+        }
 
 RATELAW_RESERVED_CONSTANTS = {
     '_t': None,  #XXX: just reserved
