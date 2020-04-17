@@ -278,7 +278,7 @@ def plot_world(
 
 plot_world_with_matplotlib = plot_world
 
-def plot_trajectory_with_matplotlib(
+def plot_trajectory(
         obs, max_count=10, figsize=6, legend=True, angle=None,
         wireframe=False, grid=True, noaxis=False, plot_range=None, **kwargs):
     """
@@ -332,6 +332,8 @@ def plot_trajectory_with_matplotlib(
             legend_opts.update(legend)
         ax.legend(**legend_opts)
     plt.show()
+
+plot_trajectory_with_matplotlib = plot_trajectory
 
 def __plot_trajectory_with_matplotlib(lines, ax, upto=None, **kwargs):
     color_scale = default_color_scale()
@@ -544,7 +546,7 @@ def plot_movie_of_trajectory2d_with_matplotlib(
     # print("Start generating a movie ...")
     display_anim(ani, output, fps=1.0 / interval, crf=crf, bitrate=bitrate)
 
-def plot_movie_with_matplotlib(
+def plot_movie(
         worlds, marker_size=3, figsize=6, grid=True,
         wireframe=False, species_list=None, max_count=None, angle=None, noaxis=False,
         interval=0.16, repeat_delay=3000, stride=1, rotate=None,
@@ -665,6 +667,8 @@ def plot_movie_with_matplotlib(
     plt.close(ani._fig)
     # print("Start generating a movie ...")
     display_anim(ani, output, fps=1.0 / interval, crf=crf, bitrate=bitrate)
+
+plot_movie_with_matplotlib = plot_movie
 
 def plot_movie_of_trajectory_with_matplotlib(
         obs, figsize=6, grid=True,
