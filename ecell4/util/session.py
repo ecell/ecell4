@@ -126,6 +126,14 @@ class Result(object):
     def observer(self):
         return self.observers[0]
 
+    # @property
+    # def y0(self):
+    #     return [(sp.serial(), self.world.get_value_exact(sp)) for sp in self.world.list_species()]
+
+    # @property
+    # def volume(self):
+    #     return self.world.edge_lengths()
+
     def data(self):
         return self.observer.data()
 
