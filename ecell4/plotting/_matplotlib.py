@@ -21,7 +21,7 @@ __all__ = [
 
 def plot_number_observer(
         *args, xlim=None, ylim=None, x=None, y=None, xlabel=None, ylabel="The Number of Molecules",
-        step=None, legend=False, filename=None, **kwargs):
+        step=None, legend=False, filename=None, figsize=None, **kwargs):
     """
     Generate a plot from NumberObservers and show it on IPython notebook
     with matplotlib.
@@ -60,7 +60,7 @@ def plot_number_observer(
     if y_keys is not None and isinstance(y_keys, str):
         y_keys = (y_keys, )
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
 
     if len(args) > 1 and isinstance(args[1], str):
@@ -147,13 +147,13 @@ def plot_number_observer(
     if legend is not False:
         legend_opts = {"loc": "best", "shadow": True}
         if isinstance(legend, dict):
-            legend_opts.update(kwargs["legend"])
+            legend_opts.update(legend)
         ax.legend(*ax.get_legend_handles_labels(), **legend_opts)
 
     if xlabel is not None:
         ax.set_xlabel(xlabel)
-    elif "x" in kwargs.keys():
-        ax.set_xlabel("The Number of Molecules [{0}]".format(kwargs["x"]))
+    elif x_key is not None:
+        ax.set_xlabel("The Number of Molecules [{0}]".format(x))
     else:
         ax.set_xlabel("Time")
     ax.set_ylabel(ylabel)
