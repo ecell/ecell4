@@ -4,7 +4,7 @@ import random
 
 from ..util.session import load_world
 from .styles import default_color_scale, matplotlib_color_scale
-from ._core import get_range_of_world, get_range_of_trajectories, eval_key
+from ._core import get_range_of_world, get_range_of_trajectories, display_anim, eval_key
 
 __all__ = [
     "plot_number_observer_with_matplotlib",
@@ -481,7 +481,6 @@ def plot_movie_of_trajectory2d_with_matplotlib(
     import matplotlib.animation as animation
     from IPython.display import display, HTML
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from ..util.simulation import load_world
     import math
 
     # print("Taking all data ...")
@@ -592,7 +591,6 @@ def plot_movie(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from ..util.simulation import load_world
 
     # print("Start generating species_list ...")
 
@@ -717,7 +715,6 @@ def plot_movie_of_trajectory_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from ..util.simulation import load_world
     import math
 
     # print("Taking all data ...")
@@ -919,7 +916,6 @@ def plot_movie2d_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from ..util.simulation import load_world
 
     plane = plane.lower()
     if len(plane) != 2 or plane[0] not in ('x', 'y', 'z') or plane[1] not in ('x', 'y', 'z'):

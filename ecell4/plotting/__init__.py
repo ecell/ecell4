@@ -2,17 +2,16 @@
 and Elegans.
 """
 
-import os
+import os.path
 import base64
 import copy
 import random
 import types
-from tempfile import NamedTemporaryFile
 
 from ..util.session import load_world
 
 from .styles import default_color_scale, attractive_mpl_color_scale
-from ._core import get_range_of_world, get_range_of_trajectories
+from ._core import get_range_of_world, get_range_of_trajectories, display_anim
 
 from . import _matplotlib, _plotly, _elegans
 BACKEND = _matplotlib
@@ -196,46 +195,6 @@ def logo(x=1, y=None):
     h = HTML(template % tuple(base64s + [("<p>%s</p>" % (img_html * x)) * y]))
     display(h)
 
-def anim_to_html(anim, filename=None, fps=6, crf=10, bitrate='1M'):
-    VIDEO_TAG = """<video controls>
-     <source src="data:video/x-webm;base64,{0}" type="video/webm">
-     Your browser does not support the video tag.
-    </video>"""
-    import base64
-
-    if not hasattr(anim, '_encoded_video'):
-        if filename is None:
-            f = NamedTemporaryFile(suffix='.webm', delete=False)
-            filename = f.name
-            f.close()
-            # anim.save(filename, fps=fps, extra_args=['-vcodec', 'libvpx'])
-            anim.save(filename, fps=fps, codec='libvpx', extra_args=['-auto-alt-ref', '0', '-crf', str(crf), '-b:v', bitrate])
-            # anim.save(filename, writer='mencoder', fps=fps, extra_args=['-lavcopts', 'vcodec=libvpx'])
-            video = open(filename, "rb").read()
-            os.remove(filename)
-            # with NamedTemporaryFile(suffix='.webm') as f:
-            #     anim.save(f.name, fps=fps, extra_args=['-vcodec', 'libvpx'])
-            #     video = open(f.name, "rb").read()
-        else:
-            with open(filename, 'w') as f:
-                anim.save(f.name, fps=fps, extra_args=['-vcodec', 'libvpx'])
-                video = open(f.name, "rb").read()
-        # anim._encoded_video = video.encode("base64")
-        anim._encoded_video = base64.encodestring(video).decode('utf-8')
-    return VIDEO_TAG.format(anim._encoded_video)
-
-def display_anim(ani, output=None, fps=6, crf=10, bitrate='1M'):
-    if output is None:
-        from IPython.display import display, HTML
-        display(HTML(anim_to_html(ani, output, fps=fps, crf=crf, bitrate=bitrate)))
-    elif os.path.splitext(output.lower())[1] == '.webm':
-        ani.save(output, fps=fps, codec='libvpx', extra_args=['-auto-alt-ref', '0', '-crf', str(crf), '-b:v', bitrate])
-    elif os.path.splitext(output.lower())[1] == '.mp4':
-        ani.save(output, fps=fps, codec='mpeg4', extra_args=['-crf', str(crf), '-b:v', bitrate])
-    else:
-        raise ValueError(
-            "An output filename is only accepted with extension '.webm' or 'mp4'.")
-
 def display_pdb(entity, width=400, height=400):
     from IPython.display import display, IFrame
     import ecell4.datasource.pdb as pdb
@@ -320,7 +279,6 @@ def plot_movie_with_attractive_mpl(
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
     from .simulation import load_world
-    import os.path
 
     # print("Start generating species_list ...")
 
