@@ -481,7 +481,7 @@ def plot_movie_of_trajectory2d_with_matplotlib(
     import matplotlib.animation as animation
     from IPython.display import display, HTML
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
+    from ..util.simulation import load_world
     import math
 
     # print("Taking all data ...")
@@ -592,7 +592,7 @@ def plot_movie(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
+    from ..util.simulation import load_world
 
     # print("Start generating species_list ...")
 
@@ -717,7 +717,7 @@ def plot_movie_of_trajectory_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
+    from ..util.simulation import load_world
     import math
 
     # print("Taking all data ...")
@@ -919,7 +919,7 @@ def plot_movie2d_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
+    from ..util.simulation import load_world
 
     plane = plane.lower()
     if len(plane) != 2 or plane[0] not in ('x', 'y', 'z') or plane[1] not in ('x', 'y', 'z'):
