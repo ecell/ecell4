@@ -9,7 +9,7 @@ from .session import load_world
 
 
 def run_simulation(
-        t, y0=None, volume=1.0, model=None, solver='ode',
+        t, y0=None, volume=1.0, model=None, solver='ode', ndiv=None,
         is_netfree=False, species_list=None, without_reset=False,
         return_type=None, opt_args=(), opt_kwargs=None,
         structures=None, observers=(), progressbar=0, rndseed=None,
@@ -35,6 +35,8 @@ def run_simulation(
         When tuple is given, the first value must be str as explained above.
         All the rest is used as arguments for the corresponding factory class.
         Keyword 's' is a shortcut for specifying 'solver'.
+    ndiv : int, optional
+        A number of time points. If t is an array, ignored. If None, log all.
     species_list : list of str, optional
         A list of names of Species observed. If None, log all.
         Default is None.
@@ -92,7 +94,7 @@ def run_simulation(
 
     from .session import Session
     session = Session(model=model, y0=y0, structures=structures, volume=volume)
-    ret = session.run(t, solver=solver, rndseed=rndseed, ndiv=None, species_list=species_list, observers=observers)
+    ret = session.run(t, solver=solver, rndseed=rndseed, ndiv=ndiv, species_list=species_list, observers=observers)
 
     if return_type is None or return_type == "default":
         return ret
