@@ -31,6 +31,7 @@ def description(entity):
         entry.append(('Author(s)', ', '.join(src.data['AuthorList'])))
         entry.append(('Source', src.data['Source']))
         entry.append(('SO', src.data['SO']))
+        entry.append(('DOI', 'https://doi.org/{}'.format(src.data['DOI'])))
         entry.append(('URL', src.link(entity_id)))
         return [entry]
 
@@ -87,7 +88,7 @@ class PubMedDataSource(object):
             entry['ID'] = entry_node.getElementsByTagName('Id')[0].firstChild.data
             for item in entry_node.getElementsByTagName('Item'):
                 name = item.getAttribute('Name')
-                if name in ('Title', 'Volume', 'Issue', 'Pages', 'Source', 'PubDate', 'SO'):
+                if name in ('Title', 'Volume', 'Issue', 'Pages', 'Source', 'PubDate', 'SO', 'DOI'):
                     entry[name] = item.firstChild.data
                 elif name == 'AuthorList':
                     entry['AuthorList'] = [author.firstChild.data for author in item.getElementsByTagName('Item') if author.getAttribute('Name') == 'Author']
