@@ -278,7 +278,6 @@ def plot_movie_with_attractive_mpl(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
 
     # print("Start generating species_list ...")
 
