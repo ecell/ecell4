@@ -281,7 +281,7 @@ class Session(object):
                 w.set_value(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), n)
         else:
             for serial, n in self.y0.items():
-                w.add_molecules(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), n)
+                w.add_molecules(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), int(n))
 
         if isinstance(w, ecell4_base.ode.ODEWorld):
             ndiv = ndiv or 100
