@@ -95,6 +95,28 @@ class PubMedDataSource(object):
             retval.append(entry)
         return retval
 
+class Formatter(object):
+
+    def __init__(self, entity):
+        entity_id = PubMedDataSource.parse_entity(entity)
+        if entity_id is None:
+            self.src = None
+        else:
+            self.src = PubMedDataSource(entity)
+
+    def __str__(self):
+        if self.src is None:
+            return None
+        return "{Authors}, {Title}, {Source}, {Issue}, {Volume}, {Pages}, {PubDate}. {DOI}".format(Authors=','.join(self.src.data['AuthorList']), **self.src.data)
+
+    def _ipython_display_(self):
+        if self.src is None:
+            return None
+        return str(self)
+
+def citation(entity, formatter=Formatter):
+    return formatter(src)
+
 
 if __name__ == "__main__":
     print(description("8752322"))
