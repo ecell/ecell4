@@ -45,8 +45,16 @@ class PubMedDataSource(object):
             data = self.parse_esummary(read_url(url))
             assert len(data) == 1
             self.data = data[0]
+            url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={}&rettype=abstract".format(entity_id)
+            abstract = self.parse_abstract(read_url(url))
+            if len(abstract) == 0:
+                self.abstract = ""
+            else:
+                assert len(abstract) == 1
+                self.abstract = abstract[0]
         else:
             self.data = None
+            self.abstract = ""
 
     @classmethod
     def parse_entity(cls, entity):
@@ -94,6 +102,14 @@ class PubMedDataSource(object):
             retval.append(entry)
         return retval
 
+    @classmethod
+    def parse_abstract(cls, efetch):
+        retval = []
+        doc = minidom.parseString(efetch)
+        for node in doc.getElementsByTagName('AbstractText'):
+            retval.append(node.firstChild.data)
+        return retval
+
 class Formatter(object):
 
     def __init__(self, entity):
@@ -102,6 +118,10 @@ class Formatter(object):
             self.src = None
         else:
             self.src = PubMedDataSource(entity)
+
+    @property
+    def abstract(self):
+        return self.src.abstract
 
     def __str__(self):
         if self.src is None:
@@ -122,7 +142,7 @@ class Formatter(object):
         display(Markdown(text))
 
 def citation(entity, formatter=Formatter):
-    return formatter(str(entity))
+    return formatter(entity)
 
 
 if __name__ == "__main__":
