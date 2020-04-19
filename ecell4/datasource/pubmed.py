@@ -106,7 +106,7 @@ class Formatter(object):
     def __str__(self):
         if self.src is None:
             return None
-        authors = ','.join(self.src.data['AuthorList'])
+        authors = ', '.join(self.src.data['AuthorList'])
         year = self.src.data['PubDate'].strip().split(' ')[0]
         return "{Authors}, {Title} {FullJournalName}, {Issue}({Volume}), {Pages}, {Year}. {DOI}. PubMed MPID: {ID}.".format(Authors=authors, Year=year, **self.src.data)
 
@@ -114,7 +114,7 @@ class Formatter(object):
         if self.src is None:
             return
         from IPython.display import display, Markdown, Latex
-        authors = ','.join(self.src.data['AuthorList'])
+        authors = ', '.join(self.src.data['AuthorList'])
         year = self.src.data['PubDate'].strip().split(' ')[0]
         doi_url = 'https://doi.org/{}'.format(self.src.data['DOI'])
         url = self.src.link(self.src.data['ID'])
