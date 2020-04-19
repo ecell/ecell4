@@ -1,10 +1,7 @@
 import re
+import numbers
 
-try:
-    from urllib.request import Request, urlopen, HTTPError  # Python3
-except ImportError:
-    from urllib2 import Request, urlopen, HTTPError  # Python2
-
+from urllib.request import Request, urlopen, HTTPError  # Python3
 from xml.dom import minidom
 
 
@@ -58,6 +55,8 @@ class PubMedDataSource(object):
         idpttrn = r'\d+'
         uri1 = r'https://www.ncbi.nlm.nih.gov/pubmed/(?P<id>{})'.format(idpttrn)
         uri2 = r'http://identifiers.org/pubmed/(?P<id>{})'.format(idpttrn)
+        if isinstance(entity, numbers.Integral) and entity >= 0:
+            entity = str(entity)
         if isinstance(entity, str):
             if re.match(r'^{}$'.format(idpttrn), entity) is not None:
                 return entity
@@ -88,7 +87,7 @@ class PubMedDataSource(object):
             entry['ID'] = entry_node.getElementsByTagName('Id')[0].firstChild.data
             for item in entry_node.getElementsByTagName('Item'):
                 name = item.getAttribute('Name')
-                if name in ('Title', 'Volume', 'Issue', 'Pages', 'Source', 'PubDate', 'SO', 'DOI'):
+                if name in ('Title', 'Volume', 'Issue', 'Pages', 'Source', 'PubDate', 'SO', 'DOI', 'FullJournalName'):
                     entry[name] = item.firstChild.data
                 elif name == 'AuthorList':
                     entry['AuthorList'] = [author.firstChild.data for author in item.getElementsByTagName('Item') if author.getAttribute('Name') == 'Author']
@@ -107,15 +106,23 @@ class Formatter(object):
     def __str__(self):
         if self.src is None:
             return None
-        return "{Authors}, {Title}, {Source}, {Issue}, {Volume}, {Pages}, {PubDate}. {DOI}".format(Authors=','.join(self.src.data['AuthorList']), **self.src.data)
+        authors = ','.join(self.src.data['AuthorList'])
+        year = self.src.data['PubDate'].strip().split(' ')[0]
+        return "{Authors}, {Title} {FullJournalName}, {Issue}({Volume}), {Pages}, {Year}. {DOI}. PubMed MPID: {ID}.".format(Authors=authors, Year=year, **self.src.data)
 
     def _ipython_display_(self):
         if self.src is None:
-            return None
-        return str(self)
+            return
+        from IPython.display import display, Markdown, Latex
+        authors = ','.join(self.src.data['AuthorList'])
+        year = self.src.data['PubDate'].strip().split(' ')[0]
+        doi_url = 'https://doi.org/{}'.format(self.src.data['DOI'])
+        url = self.src.link(self.src.data['ID'])
+        text = "{Authors}, {Title} *{FullJournalName}*, **{Issue}**({Volume}), {Pages}, {Year}. [{DOI}]({DOI_URL}). PubMed PMID: [{ID}]({URL}).".format(Authors=authors, Year=year, DOI_URL=doi_url, URL=url, **self.src.data)
+        display(Markdown(text))
 
 def citation(entity, formatter=Formatter):
-    return formatter(src)
+    return formatter(str(entity))
 
 
 if __name__ == "__main__":
