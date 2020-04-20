@@ -133,7 +133,7 @@ class Formatter(object):
     def _ipython_display_(self):
         if self.src is None:
             return
-        from IPython.display import display, Markdown, Latex
+        from IPython.display import display, Markdown
         authors = ', '.join(self.src.data['AuthorList'])
         year = self.src.data['PubDate'].strip().split(' ')[0]
         doi_url = 'https://doi.org/{}'.format(self.src.data['DOI'])
