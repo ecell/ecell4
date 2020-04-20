@@ -147,10 +147,10 @@ class Result(object):
         from ..plotting import plot_number_observer
         plot_number_observer(self.observer, *args, **kwargs)
 
-    def as_array(self):
+    def as_array(self, *args, **kwargs):
         """Require numpy"""
         import numpy
-        return numpy.array(self.observer.data())
+        return numpy.array(self.observer.data(), *args, **kwargs)
 
     def as_df(self):
         """See as_dataframe."""
@@ -191,6 +191,82 @@ class Result(object):
 
         """
         self.plot()
+
+class ResultList(object):
+
+    def __init__(self, items):
+        for item in items:
+            if not isinstance(item, Result):
+                raise ValueError("The item must be a Result object [{}].".format(repr(item)))
+        self.__items = items
+        self.__initialize()
+
+    def __initialize(self):
+        if len(self.__items) == 0:
+            self.__data = []
+            self.__err = []
+            self.__targets = []
+            return
+
+        import numpy
+        t = self.__items[0].as_array(numpy.float64).T[0]
+        data = [item.as_array(numpy.float64).T[1: ] for item in self.__items]
+        self.__targets = self.__items[0].targets()
+        self.__data = numpy.vstack([t, numpy.average(data, axis=0)]).T
+        self.__err = numpy.vstack([t, numpy.std(data, axis=0)]).T
+
+    def data(self):
+        return self.__data
+
+    def error(self):
+        return self.__err
+
+    def targets(self):
+        return self.__targets
+
+    def species_list(self):
+        return [sp.serial() for sp in self.__targets]
+
+    def plot(self, *args, **kwargs):
+        from ..plotting import plot_number_observer
+        plot_number_observer(self, *args, **kwargs)
+
+    # def as_array(self):
+    #     """Require numpy"""
+    #     import numpy
+    #     return numpy.array(self.observer.data())
+
+    # def as_df(self):
+    #     """See as_dataframe."""
+    #     return self.as_dataframe()
+
+    # def as_dataframe(self):
+    #     """Require pandas"""
+    #     import pandas
+    #     return pandas.DataFrame(data=self.data(), columns=['t'] + self.species_list())
+
+    def __getstate__(self):
+        return (self.__items, )
+
+    def __setstate__(self, state):
+        if len(state) != 1:
+            raise ValueError("Invalid state!")
+        self.__items = state[0]
+        self.__initialize()
+
+    def _ipython_display_(self):
+        """
+        Displays the object as a side effect.
+        https://ipython.readthedocs.io/en/stable/config/integrating.html
+
+        """
+        self.plot()
+
+    def __len__(self):
+        return len(self.__items)
+
+    def __getitem__(self, key):
+        return self.__items.__getitem__(key)
 
 class Session(object):
 
@@ -384,4 +460,4 @@ class Session(object):
 
         assert len(results) == len(jobs) == 1
         assert len(results[0]) == repeat
-        return results[0]
+        return ResultList(results[0])

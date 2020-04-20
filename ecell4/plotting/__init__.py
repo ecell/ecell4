@@ -13,7 +13,7 @@ from ..util.session import load_world
 from .styles import default_color_scale, attractive_mpl_color_scale
 from ._core import get_range_of_world, get_range_of_trajectories, display_anim
 
-from . import _matplotlib, _plotly, _elegans
+from . import _matplotlib
 BACKEND = _matplotlib
 
 
@@ -48,8 +48,10 @@ def plot_number_observer(*args, backend=None, **kwargs):
     if backend == 'matplotlib':
         _matplotlib.plot_number_observer(*args, **kwargs)
     elif backend == 'plotly':
+        from . import _plotly
         _plotly.plot_number_observer(*args, **kwargs)
     elif backend == 'elegans':
+        from . import _elegans
         _elegans.plot_number_observer(*args, **kwargs)
     else:
         BACKEND.plot_number_observer(*args, **kwargs)
@@ -75,8 +77,10 @@ def plot_world(*args, backend=None, **kwargs):
     if backend == 'matplotlib':
         _matplotlib.plot_world(*args, **kwargs)
     elif backend == 'plotly':
+        from . import _plotly
         _plotly.plot_world(*args, **kwargs)
     elif backend == 'elegans':
+        from . import _elegans
         _elegans.plot_world(*args, **kwargs)
     else:
         BACKEND.plot_world(*args, **kwargs)
@@ -97,6 +101,7 @@ def plot_movie(*args, backend=None, **kwargs):
     if backend == 'matplotlib':
         _matplotlib.plot_movie(*args, **kwargs)
     elif backend == 'elegans':
+        from . import _elegans
         _elegans.plot_movie(*args, **kwargs)
     else:
         BACKEND.plot_movie(*args, **kwargs)
@@ -121,6 +126,7 @@ def plot_trajectory(*args, backend=None, **kwargs):
     if backend == 'matplotlib':
         _matplotlib.plot_trajectory(*args, **kwargs)
     elif backend == 'elegans':
+        from . import _elegans
         _elegans.plot_trajectory(*args, **kwargs)
     else:
         BACKEND.plot_trajectory(*args, **kwargs)
