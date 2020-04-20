@@ -19,7 +19,7 @@ from . import sge
 from . import slurm
 
 
-def run_ensemble(target, jobs, repeat=1, nproc=None, method=None, **kwargs):
+def run_ensemble(target, jobs, repeat=1, method=None, **kwargs):
     """
     Evaluate the given function with each set of arguments, and return a list of results.
 
@@ -33,9 +33,6 @@ def run_ensemble(target, jobs, repeat=1, nproc=None, method=None, **kwargs):
     repeat : int, optional
         A number of tasks. Repeat the evaluation `n` times for each job.
         1 for default.
-    nproc : int, optional
-        A number of cores available once.
-        If nothing is given, all available cores are used.
     method : str, optional
         The way for running multiple jobs.
         Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
@@ -55,16 +52,40 @@ def run_ensemble(target, jobs, repeat=1, nproc=None, method=None, **kwargs):
     ecell4.extra.ensemble.run_azure
 
     """
-    if method is None or method.lower() == "serial":
+    config = None
+    config_filename = 'ecell4.yml'
+    if os.path.isfile(config_filename):
+        import yaml
+        try:
+            from yaml import CLoader as Loader
+        except ImportError:
+            from yaml import Loader
+        with open(config_filename) as f:
+            config_ = yaml.load(f.read(), Loader=Loader)
+        if 'ensemble' in config_:
+            config = config_['ensemble']
+
+    if method is None:
+        if config is None or 'method' not in config:
+            method = 'serial'  # default
+        else:
+            method = config['method']
+    method = method.lower()
+
+    if config is not None and method in config:
+        kwargs_ = config[method]
+        kwargs = dict(kwargs_, **kwargs)
+
+    if method == "serial":
         return run_serial(target, jobs, n=repeat, **kwargs)
-    elif method.lower() == "sge":
-        return run_sge(target, jobs, n=repeat, nproc=nproc, **kwargs)
-    elif method.lower() == "slurm":
-        return run_slurm(target, jobs, n=repeat, nproc=nproc, **kwargs)
-    elif method.lower() == "multiprocessing":
-        return run_multiprocessing(target, jobs, n=repeat, nproc=nproc, **kwargs)
-    elif method.lower() == "azure":
-        return run_azure(target, jobs, n=repeat, nproc=nproc, **kwargs)
+    elif method == "sge":
+        return run_sge(target, jobs, n=repeat, **kwargs)
+    elif method == "slurm":
+        return run_slurm(target, jobs, n=repeat, **kwargs)
+    elif method == "multiprocessing":
+        return run_multiprocessing(target, jobs, n=repeat, **kwargs)
+    elif method == "azure":
+        return run_azure(target, jobs, n=repeat, **kwargs)
 
     raise ValueError(
         'Argument "method" must be either "serial", "multiprocessing", "slurm", "sge" or "azure".')

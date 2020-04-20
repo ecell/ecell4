@@ -394,7 +394,7 @@ class Session(object):
 
     def ensemble(
         self, t, solver='ode', rndseed=None, ndiv=None, species_list=None, observers=(),
-        repeat=1, nproc=None, method=None, **kwargs):
+        repeat=1, method=None, **kwargs):
         """
         Run simulations multiple times and return its ensemble.
         Arguments are almost same with ``ecell4.util.simulation.run_simulation``.
@@ -418,9 +418,6 @@ class Session(object):
             A list of extra observer references.
         repeat : int, optional
             A number of runs. Default is 1.
-        nproc : int, optional
-            A number of processors. Ignored when method='serial'.
-            Default is None.
         method : str, optional
             The way for running multiple jobs.
             Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
@@ -456,7 +453,7 @@ class Session(object):
             }]
 
         from ..extra.ensemble import run_ensemble
-        results = run_ensemble(singlerun, jobs, repeat=repeat, nproc=nproc, method=method, **kwargs)
+        results = run_ensemble(singlerun, jobs, repeat=repeat, method=method, **kwargs)
 
         assert len(results) == len(jobs) == 1
         assert len(results[0]) == repeat

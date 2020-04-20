@@ -52,7 +52,7 @@ def run_simulation(
 def ensemble_simulations(
         t, y0=None, volume=1.0, model=None, solver='ode', ndiv=None,
         species_list=None, structures=None, observers=(), rndseed=None,
-        repeat=1, nproc=None, method=None,
+        repeat=1, method=None,
         **kwargs):
     """
     Run simulations multiple times and return its ensemble.
@@ -63,9 +63,6 @@ def ensemble_simulations(
     ----------
     repeat : int, optional
         A number of runs. Default is 1.
-    nproc : int, optional
-        A number of processors. Ignored when method='serial'.
-        Default is None.
     method : str, optional
         The way for running multiple jobs.
         Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
@@ -92,7 +89,7 @@ def ensemble_simulations(
     session = Session(model=model, y0=y0, structures=structures, volume=volume)
     ret = session.ensemble(
         t, solver=solver, rndseed=rndseed, ndiv=ndiv, species_list=species_list, observers=observers,
-        repeat=repeat, nproc=nproc, method=method, **kwargs)
+        repeat=repeat, method=method, **kwargs)
     return ret
 
 def number_observer(t=None, targets=None):
