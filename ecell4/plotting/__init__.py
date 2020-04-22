@@ -109,14 +109,15 @@ def plot_movie(*args, backend=None, **kwargs):
 def plot_trajectory(*args, backend=None, **kwargs):
     """
     Generate a plot from received instance of TrajectoryObserver and show it
-    See also plot_trajectory_with_elegans and plot_trajectory_with_matplotlib.
+    See also plot_trajectory_with_plotly, plot_trajectory_with_elegans
+    and plot_trajectory_with_matplotlib.
 
     Parameters
     ----------
     obs : TrajectoryObserver
         TrajectoryObserver to render.
     backend : str, optional
-        backend. Either one of 'matplotlib' or 'elegans' is supported.
+        backend. Either one of 'matplotlib', 'plotly' or 'elegans' is supported.
 
     Examples
     --------
@@ -125,6 +126,9 @@ def plot_trajectory(*args, backend=None, **kwargs):
     """
     if backend == 'matplotlib':
         _matplotlib.plot_trajectory(*args, **kwargs)
+    elif backend == 'plotly':
+        from . import _plotly
+        _plotly.plot_trajectory(*args, **kwargs)
     elif backend == 'elegans':
         from . import _elegans
         _elegans.plot_trajectory(*args, **kwargs)

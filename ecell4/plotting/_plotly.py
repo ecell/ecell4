@@ -9,6 +9,7 @@ from .styles import plotly_color_scale
 __all__ = [
     'plot_number_observer_with_plotly',
     'plot_world_with_plotly',
+    'plot_trajectory_with_plotly',
     ]
 
 
@@ -113,7 +114,7 @@ def plot_world(world, species_list=None, max_count=1000, marker=None, layout=Non
         The maximum number of particles to show for each species.
         None means no limitation.
     marker : dict, optional
-        The custom properties for marker.
+        The custom properties for markers.
         See also https://plot.ly/python/marker-style/
     layout : dict, optional
         The custom properties for layout.
@@ -168,3 +169,52 @@ def plot_world(world, species_list=None, max_count=1000, marker=None, layout=Non
     plotly.offline.iplot(fig)
 
 plot_world_with_plotly = plot_world
+
+def plot_trajectory(
+        obs, max_count=10, line=None, layout=None, **kwargs):
+    """
+    Generate a plot from received instance of TrajectoryObserver and show it
+    on IPython notebook.
+
+    Parameters
+    ----------
+    obs : TrajectoryObserver
+        TrajectoryObserver to render.
+    max_count : Integer, default 10
+        The maximum number of particles to show. If None, show all.
+    line : dict, optional
+        The custom properties for lines.
+        See also https://plot.ly/python/line-style/
+    layout : dict, optional
+        The custom properties for layout.
+        See also https://plot.ly/python/reference/#layout
+
+    """
+    import numpy
+
+    import plotly
+    import plotly.graph_objs as go
+    plotly.offline.init_notebook_mode()
+
+    line_ = line or {}
+
+    data = obs.data()
+    if max_count is not None and len(data) > max_count:
+        data = random.sample(data, max_count)
+
+    traces = []
+    for i, trajectory in enumerate(data):
+        trajectory = numpy.array([tuple(pos) for pos in trajectory]).T
+        trace = go.Scatter3d(
+            x=trajectory[0], y=trajectory[1], z=trajectory[2],
+            line=line_, mode='lines', name=str(i))
+        traces.append(trace)
+
+    layout_ = dict(margin=dict(l=0, r=0, b=0, t=0))
+    if layout is not None:
+        layout_.update(layout)
+    layout_ = go.Layout(**layout_)
+    fig = go.Figure(data=traces, layout=layout_)
+    plotly.offline.iplot(fig)
+
+plot_trajectory_with_plotly = plot_trajectory
