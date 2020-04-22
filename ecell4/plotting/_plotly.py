@@ -12,6 +12,16 @@ __all__ = [
     'plot_trajectory_with_plotly',
     ]
 
+def init_notebook_mode(connected=False):
+    import plotly.offline
+    plotly.offline.init_notebook_mode()
+    try:
+        import google.colab
+    except ImportError:
+        pass
+    else:
+        import plotly.io as pio
+        pio.renderers.default = "colab"
 
 def plot_number_observer(
         *args, x=None, y=None, step=False, layout=None, **kwargs):
@@ -47,7 +57,7 @@ def plot_number_observer(
     if y_keys is not None and isinstance(y_keys, str):
         y_keys = (y_keys, )
 
-    plotly.offline.init_notebook_mode()
+    init_notebook_mode()
     fig = go.Figure()
 
     data, xdata = None, None
@@ -147,7 +157,7 @@ def plot_world(world, species_list=None, max_count=1000, marker=None, layout=Non
     import plotly
     import plotly.graph_objs as go
 
-    plotly.offline.init_notebook_mode()
+    init_notebook_mode()
 
     marker_ = dict(size=6, line=dict(color='rgb(204, 204, 204)', width=1),
             opacity=0.9, symbol='circle')
@@ -194,7 +204,7 @@ def plot_trajectory(
 
     import plotly
     import plotly.graph_objs as go
-    plotly.offline.init_notebook_mode()
+    init_notebook_mode()
 
     line_ = line or {}
 
