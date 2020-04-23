@@ -1,3 +1,4 @@
+import warnings
 import copy
 import collections.abc
 import numbers
@@ -202,15 +203,34 @@ class ResultList(object):
         self.__initialize()
 
     def __initialize(self):
+        self.__data = []
+        self.__err = []
+        self.__targets = []
+
         if len(self.__items) == 0:
-            self.__data = []
+            warnings.warn("No item was given.")
+            return
+        elif len(self.__items) == 1:
+            warnings.warn("Only one item was given.")
+            self.__data = self.items[0].data()
             self.__err = []
-            self.__targets = []
+            self.__targets = self.items[0].targets()
             return
 
         import numpy
         t = self.__items[0].as_array(numpy.float64).T[0]
-        data = [item.as_array(numpy.float64).T[1: ] for item in self.__items]
+        if len(t) == 0:
+            warnings.warn("No data was given.")
+            return
+
+        data = []
+        for item in self.__items:
+            data_ = item.as_array(numpy.float64).T[1: ]
+            if data_.shape[1] != len(t):
+                warnings.warn("Invalid state. The length of data varies [{} != {}].".format(len(t), data_.shape[1]))
+                return
+            data.append(data_)
+
         self.__targets = self.__items[0].targets()
         self.__data = numpy.vstack([t, numpy.average(data, axis=0)]).T
         self.__err = numpy.vstack([t, numpy.std(data, axis=0)]).T

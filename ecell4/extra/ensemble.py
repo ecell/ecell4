@@ -288,7 +288,6 @@ def run_sge(target, jobs, n=1, nproc=None, path='.', delete=True, wait=True, env
     if isinstance(target, types.LambdaType) and target.__name__ == "<lambda>":
         raise RuntimeError("A lambda function is not accepted")
 
-    # src = textwrap.dedent(inspect.getsource(singlerun)).replace(r'"', r'\"')
     src = textwrap.dedent(inspect.getsource(target)).replace(r'"', r'\"')
     if re.match('[\s\t]+', src.split('\n')[0]) is not None:
         raise RuntimeError(
@@ -464,7 +463,6 @@ def run_slurm(target, jobs, n=1, nproc=None, path='.', delete=True, wait=True, e
     if isinstance(target, types.LambdaType) and target.__name__ == "<lambda>":
         raise RuntimeError("A lambda function is not accepted")
 
-    # src = textwrap.dedent(inspect.getsource(singlerun)).replace(r'"', r'\"')
     src = textwrap.dedent(inspect.getsource(target)).replace(r'"', r'\"')
     if re.match('[\s\t]+', src.split('\n')[0]) is not None:
         raise RuntimeError(
@@ -631,18 +629,6 @@ def getseed(myseed, i):
     rndseed = int(myseed[(i - 1) * 8: i * 8], 16)
     rndseed = rndseed % (2 ** 31)  #XXX: trancate the first bit
     return rndseed
-
-#XXX:
-#XXX:
-#XXX:
-
-def singlerun(job, job_id, task_id):
-    import ecell4.util.simulation
-    import ecell4.extra.ensemble
-    rndseed = ecell4.extra.ensemble.getseed(job.pop('myseed'), task_id)
-    job.update({'rndseed': rndseed})
-    ret = ecell4.util.simulation.run_simulation(**job)
-    return ret.as_array()
 
 
 if __name__ == "__main__":
