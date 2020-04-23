@@ -126,11 +126,11 @@ def stl2mesh3d(filename, **kwargs):
     J = numpy.take(ixr, [3 * k + 1 for k in range(p)])
     K = numpy.take(ixr, [3 * k + 2 for k in range(p)])
     x, y, z = vertices.T
-    colorscale= [[0, '#e5dee5'], [1, '#e5dee5']]
+    # colorscale= [[0, '#e5dee5'], [1, '#e5dee5']]
 
     mesh3D = go.Mesh3d(
         x=x, y=y, z=z, i=I, j=J, k=K,
-        flatshading=True, colorscale=colorscale, intensity=z, showscale=False, **kwargs)
+        flatshading=True, intensity=z, showscale=False, **kwargs)
     # layout_ = dict(scene_aspectmode='data', margin=dict(l=0, r=0, b=0, t=0))
     # layout_ = go.Layout(**layout_)
     # fig = go.Figure(data=[mesh3D], layout=layout_)
@@ -246,7 +246,7 @@ def plot_trajectory(
     traces = []
 
     if stl is not None:
-        traces.extend(stl2mesh3d(filename, opacity=0.3) for filename in stl)
+        traces.extend(stl2mesh3d(filename, opacity=0.5) for filename in stl)
 
     for i, trajectory in enumerate(data):
         trajectory = numpy.array([tuple(pos) for pos in trajectory]).T
