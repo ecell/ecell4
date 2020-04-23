@@ -111,7 +111,6 @@ def plot_number_observer(
 plot_number_observer_with_plotly = plot_number_observer
 
 def stl2mesh3d(filename, **kwargs):
-    import plotly
     import plotly.graph_objs as go
     import numpy
 
@@ -131,11 +130,20 @@ def stl2mesh3d(filename, **kwargs):
     mesh3D = go.Mesh3d(
         x=x, y=y, z=z, i=I, j=J, k=K,
         flatshading=True, intensity=z, showscale=False, **kwargs)
-    # layout_ = dict(scene_aspectmode='data', margin=dict(l=0, r=0, b=0, t=0))
-    # layout_ = go.Layout(**layout_)
-    # fig = go.Figure(data=[mesh3D], layout=layout_)
-    # plotly.offline.iplot(fig)
     return mesh3D
+
+def plot_stl(filename, layout=None, **kwargs):
+    import plotly
+    import plotly.graph_objs as go
+
+    mesh3D = stl2mesh3d(filename, **kwargs)
+    layout_ = dict(scene_aspectmode='data', margin=dict(l=0, r=0, b=0, t=0))
+    if layout is not None:
+        layout_.update(layout)
+    layout_ = go.Layout(**layout_)
+    fig = go.Figure(data=[mesh3D], layout=layout_)
+    plotly.offline.iplot(fig)
+
 
 def plot_world(world, species_list=None, max_count=1000, marker=None, layout=None, stl=None):
     """
