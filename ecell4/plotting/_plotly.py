@@ -110,7 +110,34 @@ def plot_number_observer(
 
 plot_number_observer_with_plotly = plot_number_observer
 
-def plot_world(world, species_list=None, max_count=1000, marker=None, layout=None):
+def stl2mesh3d(filename):
+    import plotly
+    import plotly.graph_objs as go
+    import numpy
+
+    init_notebook_mode()
+
+    from stl import mesh  # numpy-stl
+    stl_mesh = mesh.Mesh.from_file(filename)
+
+    p, q, r = stl_mesh.vectors.shape
+    vertices, ixr = numpy.unique(stl_mesh.vectors.reshape(p * q, r), return_inverse=True, axis=0)
+    I = numpy.take(ixr, [3 * k for k in range(p)])
+    J = numpy.take(ixr, [3 * k + 1 for k in range(p)])
+    K = numpy.take(ixr, [3 * k + 2 for k in range(p)])
+    x, y, z = vertices.T
+    colorscale= [[0, '#e5dee5'], [1, '#e5dee5']]
+
+    mesh3D = go.Mesh3d(
+        x=x, y=y, z=z, i=I, j=J, k=K,
+        flatshading=True, colorscale=colorscale, intensity=z, showscale=False)
+    # layout_ = dict(scene_aspectmode='data', margin=dict(l=0, r=0, b=0, t=0))
+    # layout_ = go.Layout(**layout_)
+    # fig = go.Figure(data=[mesh3D], layout=layout_)
+    # plotly.offline.iplot(fig)
+    return mesh3D
+
+def plot_world(world, species_list=None, max_count=1000, marker=None, layout=None, stl=None):
     """
     Generate a plot from received instance of World and show it on IPython notebook.
 
@@ -164,24 +191,28 @@ def plot_world(world, species_list=None, max_count=1000, marker=None, layout=Non
     if marker is not None:
         marker_.update(marker)
 
-    data = []
+    traces = []
+
+    if stl is not None:
+        traces.extend(stl2mesh3d(filename) for filename in stl)
+
     for serial, (x, y, z) in positions.items():
         trace = go.Scatter3d(
             x=x, y=y, z=z, mode='markers',
             marker=marker_, name=serial)
-        data.append(trace)
+        traces.append(trace)
 
-    layout_ = dict(margin=dict(l=0, r=0, b=0, t=0))
+    layout_ = dict(scene_aspectmode='data', margin=dict(l=0, r=0, b=0, t=0))
     if layout is not None:
         layout_.update(layout)
     layout_ = go.Layout(**layout_)
-    fig = go.Figure(data=data, layout=layout_)
+    fig = go.Figure(data=traces, layout=layout_)
     plotly.offline.iplot(fig)
 
 plot_world_with_plotly = plot_world
 
 def plot_trajectory(
-        obs, max_count=10, line=None, layout=None, **kwargs):
+        obs, max_count=10, line=None, layout=None, stl=None, **kwargs):
     """
     Generate a plot from received instance of TrajectoryObserver and show it
     on IPython notebook.
@@ -213,6 +244,10 @@ def plot_trajectory(
         data = random.sample(data, max_count)
 
     traces = []
+
+    if stl is not None:
+        traces.extend(stl2mesh3d(filename) for filename in stl)
+
     for i, trajectory in enumerate(data):
         trajectory = numpy.array([tuple(pos) for pos in trajectory]).T
         trace = go.Scatter3d(
@@ -220,7 +255,7 @@ def plot_trajectory(
             line=line_, mode='lines', name=str(i))
         traces.append(trace)
 
-    layout_ = dict(margin=dict(l=0, r=0, b=0, t=0))
+    layout_ = dict(scene_aspectmode='data', margin=dict(l=0, r=0, b=0, t=0))
     if layout is not None:
         layout_.update(layout)
     layout_ = go.Layout(**layout_)
