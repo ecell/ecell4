@@ -110,7 +110,7 @@ def plot_number_observer(
 
 plot_number_observer_with_plotly = plot_number_observer
 
-def stl2mesh3d(filename):
+def stl2mesh3d(filename, **kwargs):
     import plotly
     import plotly.graph_objs as go
     import numpy
@@ -130,7 +130,7 @@ def stl2mesh3d(filename):
 
     mesh3D = go.Mesh3d(
         x=x, y=y, z=z, i=I, j=J, k=K,
-        flatshading=True, colorscale=colorscale, intensity=z, showscale=False)
+        flatshading=True, colorscale=colorscale, intensity=z, showscale=False, **kwargs)
     # layout_ = dict(scene_aspectmode='data', margin=dict(l=0, r=0, b=0, t=0))
     # layout_ = go.Layout(**layout_)
     # fig = go.Figure(data=[mesh3D], layout=layout_)
@@ -194,7 +194,7 @@ def plot_world(world, species_list=None, max_count=1000, marker=None, layout=Non
     traces = []
 
     if stl is not None:
-        traces.extend(stl2mesh3d(filename) for filename in stl)
+        traces.extend(stl2mesh3d(filename, opacity=0.3) for filename in stl)
 
     for serial, (x, y, z) in positions.items():
         trace = go.Scatter3d(
@@ -246,7 +246,7 @@ def plot_trajectory(
     traces = []
 
     if stl is not None:
-        traces.extend(stl2mesh3d(filename) for filename in stl)
+        traces.extend(stl2mesh3d(filename, opacity=0.3) for filename in stl)
 
     for i, trajectory in enumerate(data):
         trajectory = numpy.array([tuple(pos) for pos in trajectory]).T
