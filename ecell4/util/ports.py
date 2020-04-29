@@ -61,29 +61,30 @@ def export_sbml(model, y0=None, volume=1.0, is_valid=True):
 
     if unit.HAS_PINT:
         if isinstance(volume, unit._Quantity):
-            if unit.STRICT:
-                if isinstance(volume.magnitude, ecell4_base.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
-                    raise ValueError("Cannot convert [volume] from '{}' ({}) to '[length]'".format(
-                        volume.dimensionality, volume.u))
-                elif not unit.check_dimensionality(volume, '[volume]'):
-                    raise ValueError("Cannot convert [volume] from '{}' ({}) to '[volume]'".format(
-                        volume.dimensionality, volume.u))
+            # if unit.STRICT:
+            #     if isinstance(volume.magnitude, ecell4_base.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
+            #         raise ValueError("Cannot convert [volume] from '{}' ({}) to '[length]'".format(
+            #             volume.dimensionality, volume.u))
+            #     elif not unit.check_dimensionality(volume, '[volume]'):
+            #         raise ValueError("Cannot convert [volume] from '{}' ({}) to '[volume]'".format(
+            #             volume.dimensionality, volume.u))
             volume = volume.to_base_units().magnitude
 
         y0 = y0.copy()
         for key, value in y0.items():
             if isinstance(value, unit._Quantity):
-                if not unit.STRICT:
-                    y0[key] = value.to_base_units().magnitude
-                elif unit.check_dimensionality(value, '[substance]'):
-                    y0[key] = value.to_base_units().magnitude
-                elif unit.check_dimensionality(value, '[concentration]'):
-                    volume = w.volume() if not isinstance(w, ecell4_base.spatiocyte.SpatiocyteWorld) else w.actual_volume()
-                    y0[key] = value.to_base_units().magnitude * volume
-                else:
-                    raise ValueError(
-                        "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
-                            key, value.dimensionality, value.u))
+                y0[key] = value.to_base_units().magnitude
+                # if not unit.STRICT:
+                #     y0[key] = value.to_base_units().magnitude
+                # elif unit.check_dimensionality(value, '[substance]'):
+                #     y0[key] = value.to_base_units().magnitude
+                # elif unit.check_dimensionality(value, '[concentration]'):
+                #     volume = w.volume() if not isinstance(w, ecell4_base.spatiocyte.SpatiocyteWorld) else w.actual_volume()
+                #     y0[key] = value.to_base_units().magnitude * volume
+                # else:
+                #     raise ValueError(
+                #         "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
+                #             key, value.dimensionality, value.u))
 
     if isinstance(volume, ecell4_base.core.Real3):
         comp1.setSize(volume[0] * volume[1] * volume[2])
