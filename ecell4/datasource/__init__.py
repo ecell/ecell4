@@ -58,4 +58,6 @@ def whereis(entity, collections=None):
     print_descriptions(desc)
 
 
-__all__ = ['description', 'whereis']
+from .pubmed import citation
+
+__all__ = ['description', 'whereis', 'citation']

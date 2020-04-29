@@ -4,7 +4,7 @@ import random
 
 from ..util.session import load_world
 from .styles import default_color_scale, matplotlib_color_scale
-from ._core import get_range_of_world, get_range_of_trajectories, eval_key
+from ._core import get_range_of_world, get_range_of_trajectories, display_anim, eval_key
 
 __all__ = [
     "plot_number_observer_with_matplotlib",
@@ -21,7 +21,7 @@ __all__ = [
 
 def plot_number_observer(
         *args, xlim=None, ylim=None, x=None, y=None, xlabel=None, ylabel="The Number of Molecules",
-        step=None, legend=False, filename=None, **kwargs):
+        step=None, legend=False, filename=None, figsize=None, **kwargs):
     """
     Generate a plot from NumberObservers and show it on IPython notebook
     with matplotlib.
@@ -60,7 +60,7 @@ def plot_number_observer(
     if y_keys is not None and isinstance(y_keys, str):
         y_keys = (y_keys, )
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
 
     if len(args) > 1 and isinstance(args[1], str):
@@ -147,13 +147,13 @@ def plot_number_observer(
     if legend is not False:
         legend_opts = {"loc": "best", "shadow": True}
         if isinstance(legend, dict):
-            legend_opts.update(kwargs["legend"])
+            legend_opts.update(legend)
         ax.legend(*ax.get_legend_handles_labels(), **legend_opts)
 
     if xlabel is not None:
         ax.set_xlabel(xlabel)
-    elif "x" in kwargs.keys():
-        ax.set_xlabel("The Number of Molecules [{0}]".format(kwargs["x"]))
+    elif x_key is not None:
+        ax.set_xlabel("The Number of Molecules [{0}]".format(x))
     else:
         ax.set_xlabel("Time")
     ax.set_ylabel(ylabel)
@@ -278,7 +278,7 @@ def plot_world(
 
 plot_world_with_matplotlib = plot_world
 
-def plot_trajectory_with_matplotlib(
+def plot_trajectory(
         obs, max_count=10, figsize=6, legend=True, angle=None,
         wireframe=False, grid=True, noaxis=False, plot_range=None, **kwargs):
     """
@@ -332,6 +332,8 @@ def plot_trajectory_with_matplotlib(
             legend_opts.update(legend)
         ax.legend(**legend_opts)
     plt.show()
+
+plot_trajectory_with_matplotlib = plot_trajectory
 
 def __plot_trajectory_with_matplotlib(lines, ax, upto=None, **kwargs):
     color_scale = default_color_scale()
@@ -479,7 +481,6 @@ def plot_movie_of_trajectory2d_with_matplotlib(
     import matplotlib.animation as animation
     from IPython.display import display, HTML
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
     import math
 
     # print("Taking all data ...")
@@ -544,7 +545,7 @@ def plot_movie_of_trajectory2d_with_matplotlib(
     # print("Start generating a movie ...")
     display_anim(ani, output, fps=1.0 / interval, crf=crf, bitrate=bitrate)
 
-def plot_movie_with_matplotlib(
+def plot_movie(
         worlds, marker_size=3, figsize=6, grid=True,
         wireframe=False, species_list=None, max_count=None, angle=None, noaxis=False,
         interval=0.16, repeat_delay=3000, stride=1, rotate=None,
@@ -590,7 +591,6 @@ def plot_movie_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
 
     # print("Start generating species_list ...")
 
@@ -666,6 +666,8 @@ def plot_movie_with_matplotlib(
     # print("Start generating a movie ...")
     display_anim(ani, output, fps=1.0 / interval, crf=crf, bitrate=bitrate)
 
+plot_movie_with_matplotlib = plot_movie
+
 def plot_movie_of_trajectory_with_matplotlib(
         obs, figsize=6, grid=True,
         wireframe=False, max_count=None, angle=None, noaxis=False,
@@ -713,7 +715,6 @@ def plot_movie_of_trajectory_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
     import math
 
     # print("Taking all data ...")
@@ -915,7 +916,6 @@ def plot_movie2d_with_matplotlib(
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     from ecell4_base.core import Species, FixedIntervalHDF5Observer
-    from .simulation import load_world
 
     plane = plane.lower()
     if len(plane) != 2 or plane[0] not in ('x', 'y', 'z') or plane[1] not in ('x', 'y', 'z'):

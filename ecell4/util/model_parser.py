@@ -272,7 +272,7 @@ class SpeciesParsingVisitor(Visitor):
 
     def visit_default(self, obj):
         if (not isinstance(obj, (numbers.Real, ecell4_base.core.Quantity_Real, ecell4_base.core.Quantity_Integer))
-                and not (str(obj) in RATELAW_RESERVED_CONSTANTS and RATELAW_RESERVED_CONSTANTS[str(obj)] is None)):
+                and str(obj) not in RATELAW_RESERVED_CONSTANTS):
             raise TypeError("An invalid type '{}' was given [{}].".format(type(obj).__name__, obj))
         return Visitor.visit_default(self, obj)
 

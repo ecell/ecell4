@@ -1,3 +1,4 @@
+import warnings
 import copy
 import collections.abc
 import numbers
@@ -126,6 +127,14 @@ class Result(object):
     def observer(self):
         return self.observers[0]
 
+    # @property
+    # def y0(self):
+    #     return [(sp.serial(), self.world.get_value_exact(sp)) for sp in self.world.list_species()]
+
+    # @property
+    # def volume(self):
+    #     return self.world.edge_lengths()
+
     def data(self):
         return self.observer.data()
 
@@ -139,10 +148,10 @@ class Result(object):
         from ..plotting import plot_number_observer
         plot_number_observer(self.observer, *args, **kwargs)
 
-    def as_array(self):
+    def as_array(self, *args, **kwargs):
         """Require numpy"""
         import numpy
-        return numpy.array(self.observer.data())
+        return numpy.array(self.observer.data(), *args, **kwargs)
 
     def as_df(self):
         """See as_dataframe."""
@@ -183,6 +192,101 @@ class Result(object):
 
         """
         self.plot()
+
+class ResultList(object):
+
+    def __init__(self, items):
+        for item in items:
+            if not isinstance(item, Result):
+                raise ValueError("The item must be a Result object [{}].".format(repr(item)))
+        self.__items = items
+        self.__initialize()
+
+    def __initialize(self):
+        self.__data = []
+        self.__err = []
+        self.__targets = []
+
+        if len(self.__items) == 0:
+            warnings.warn("No item was given.")
+            return
+        elif len(self.__items) == 1:
+            warnings.warn("Only one item was given.")
+            self.__data = self.items[0].data()
+            self.__err = []
+            self.__targets = self.items[0].targets()
+            return
+
+        import numpy
+        t = self.__items[0].as_array(numpy.float64).T[0]
+        if len(t) == 0:
+            warnings.warn("No data was given.")
+            return
+
+        data = []
+        for item in self.__items:
+            data_ = item.as_array(numpy.float64).T[1: ]
+            if data_.shape[1] != len(t):
+                warnings.warn("Invalid state. The length of data varies [{} != {}].".format(len(t), data_.shape[1]))
+                return
+            data.append(data_)
+
+        self.__targets = self.__items[0].targets()
+        self.__data = numpy.vstack([t, numpy.average(data, axis=0)]).T
+        self.__err = numpy.vstack([t, numpy.std(data, axis=0)]).T
+
+    def data(self):
+        return self.__data
+
+    def error(self):
+        return self.__err
+
+    def targets(self):
+        return self.__targets
+
+    def species_list(self):
+        return [sp.serial() for sp in self.__targets]
+
+    def plot(self, *args, **kwargs):
+        from ..plotting import plot_number_observer
+        plot_number_observer(self, *args, **kwargs)
+
+    # def as_array(self):
+    #     """Require numpy"""
+    #     import numpy
+    #     return numpy.array(self.observer.data())
+
+    # def as_df(self):
+    #     """See as_dataframe."""
+    #     return self.as_dataframe()
+
+    # def as_dataframe(self):
+    #     """Require pandas"""
+    #     import pandas
+    #     return pandas.DataFrame(data=self.data(), columns=['t'] + self.species_list())
+
+    def __getstate__(self):
+        return (self.__items, )
+
+    def __setstate__(self, state):
+        if len(state) != 1:
+            raise ValueError("Invalid state!")
+        self.__items = state[0]
+        self.__initialize()
+
+    def _ipython_display_(self):
+        """
+        Displays the object as a side effect.
+        https://ipython.readthedocs.io/en/stable/config/integrating.html
+
+        """
+        self.plot()
+
+    def __len__(self):
+        return len(self.__items)
+
+    def __getitem__(self, key):
+        return self.__items.__getitem__(key)
 
 class Session(object):
 
@@ -273,7 +377,7 @@ class Session(object):
                 w.set_value(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), n)
         else:
             for serial, n in self.y0.items():
-                w.add_molecules(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), n)
+                w.add_molecules(ecell4_base.core.format_species(ecell4_base.core.Species(serial)), int(n))
 
         if isinstance(w, ecell4_base.ode.ODEWorld):
             ndiv = ndiv or 100
@@ -310,7 +414,7 @@ class Session(object):
 
     def ensemble(
         self, t, solver='ode', rndseed=None, ndiv=None, species_list=None, observers=(),
-        repeat=1, nproc=None, method=None, **kwargs):
+        repeat=1, method=None, **kwargs):
         """
         Run simulations multiple times and return its ensemble.
         Arguments are almost same with ``ecell4.util.simulation.run_simulation``.
@@ -334,9 +438,6 @@ class Session(object):
             A list of extra observer references.
         repeat : int, optional
             A number of runs. Default is 1.
-        nproc : int, optional
-            A number of processors. Ignored when method='serial'.
-            Default is None.
         method : str, optional
             The way for running multiple jobs.
             Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
@@ -372,8 +473,8 @@ class Session(object):
             }]
 
         from ..extra.ensemble import run_ensemble
-        results = run_ensemble(singlerun, jobs, repeat=repeat, nproc=nproc, method=method, **kwargs)
+        results = run_ensemble(singlerun, jobs, repeat=repeat, method=method, **kwargs)
 
         assert len(results) == len(jobs) == 1
         assert len(results[0]) == repeat
-        return results[0]
+        return ResultList(results[0])
