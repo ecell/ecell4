@@ -18,10 +18,14 @@ setup(
         "templates/*.tmpl", "templates/ecelllogo/*.png"]},
     url='https://github.com/ecell/ecell4',
     license='the GNU General Public License v3',
+    extras_require={"all": ["plotly", "pint"]},
     author='Kazunari Kaizu',
     author_email='kaizu@riken.jp',
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    install_requires=['ecell4-base', 'matplotlib']
+    install_requires=[
+        "ecell4-base>=2.0.5",
+        "matplotlib"
+    ]
 )

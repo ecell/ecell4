@@ -1,6 +1,101 @@
 import numbers
 from .session import load_world, Session
 
+from .decorator import get_model, reset_model
+from . import viz
+from ..extra import unit
+from ..extra.ensemble import ensemble_simulations
+
+
+def load_world(filename):
+    """
+    Load a world from the given HDF5 filename.
+    The return type is determined by ``ecell4_base.core.load_version_information``.
+
+    Parameters
+    ----------
+    filename : str
+        A HDF5 filename.
+
+    Returns
+    -------
+    w : World
+        Return one from ``BDWorld``, ``EGFRDWorld``, ``MesoscopicWorld``,
+        ``ODEWorld``, ``GillespieWorld``, ``SpatiocyteWorld`` and ``SGFRDWorld``.
+
+    """
+    import ecell4_base
+
+    vinfo = ecell4_base.core.load_version_information(filename)
+    if vinfo.startswith("ecell4-bd"):
+        return ecell4_base.bd.World(filename)
+    elif vinfo.startswith("ecell4-egfrd"):
+        return ecell4_base.egfrd.World(filename)
+    elif vinfo.startswith("ecell4-meso"):
+        return ecell4_base.meso.World(filename)
+    elif vinfo.startswith("ecell4-ode"):
+        return ecell4_base.ode.World(filename)
+    elif vinfo.startswith("ecell4-gillespie"):
+        return ecell4_base.gillespie.World(filename)
+    elif vinfo.startswith("ecell4-spatiocyte"):
+        return ecell4_base.spatiocyte.World(filename)
+    elif vinfo.startswith("ecell4-sgfrd"):
+        return ecell4_base.sgfrd.World(filename)
+    elif vinfo == "":
+        raise RuntimeError("No version information was found in [{0}]".format(filename))
+    raise RuntimeError("Unknown version information [{0}]".format(vinfo))
+
+def get_factory(solver, *args):
+    import ecell4_base
+
+    if solver == 'ode':
+        return ecell4_base.ode.Factory(*args)
+    elif solver == 'gillespie':
+        return ecell4_base.gillespie.Factory(*args)
+    elif solver == 'spatiocyte':
+        return ecell4_base.spatiocyte.Factory(*args)
+    elif solver == 'meso':
+        return ecell4_base.meso.Factory(*args)
+    elif solver == 'bd':
+        return ecell4_base.bd.Factory(*args)
+    elif solver == 'egfrd':
+        return ecell4_base.egfrd.Factory(*args)
+    elif solver == 'sgfrd':
+        return ecell4_base.sgfrd.Factory(*args)
+    else:
+        raise ValueError(
+            'unknown solver name was given: ' + repr(solver)
+            + '. use ode, gillespie, spatiocyte, meso, bd or egfrd')
+
+def get_shape(shape, *args):
+    if not isinstance(shape, str):
+        raise ValueError("Invalid shape was given [{}]. This must be 'str'".format(repr(shape)))
+
+    import ecell4_base
+    shape = shape.lower()
+    shape_map = {
+        'aabb': ecell4_base.core.AABB,
+        # 'affinetransformation': ecell4_base.core.AffineTransformation,
+        'cylinder': ecell4_base.core.Cylinder,
+        'cylindricalsurface': ecell4_base.core.CylindricalSurface,
+        'meshsurface': ecell4_base.core.MeshSurface,
+        'planarsurface': ecell4_base.core.PlanarSurface,
+        'rod': ecell4_base.core.Rod,
+        'rodsurface': ecell4_base.core.RodSurface,
+        'sphere': ecell4_base.core.Sphere,
+        'sphericalsurface': ecell4_base.core.SphericalSurface,
+        # 'complement': ecell4_base.core.Complement,
+        # 'union': ecell4_base.core.Union,
+        }
+    if shape in shape_map:
+        args = [
+            value.to_base_units().magnitude if isinstance(value, unit._Quantity) else value
+            for value in args]
+        return shape_map[shape](*args)
+    else:
+        raise ValueError(
+            'unknown shape type was given: ' + repr(shape)
+            + '. use {}'.format(', '.join(sorted(shape_map.keys()))))
 
 def run_simulation(
         t, y0=None, volume=1.0, model=None, solver='ode', ndiv=None,
@@ -21,7 +116,7 @@ def run_simulation(
         Keyword 'm' is a shortcut for specifying 'model'.
     solver : str, tuple or Factory, optional
         Solver type. Choose one from 'ode', 'gillespie', 'spatiocyte', 'meso',
-        'bd' and 'egfrd'. Default is 'ode'.
+        'bd', 'egfrd', and 'sgfrd'. Default is 'ode'.
         When tuple is given, the first value must be str as explained above.
         All the rest is used as arguments for the corresponding factory class.
         Keyword 's' is a shortcut for specifying 'solver'.
