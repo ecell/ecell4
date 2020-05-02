@@ -1,5 +1,5 @@
-import collections
 import numbers
+from .session import load_world, Session
 
 from .decorator import get_model, reset_model
 from . import viz
@@ -98,12 +98,8 @@ def get_shape(shape, *args):
             + '. use {}'.format(', '.join(sorted(shape_map.keys()))))
 
 def run_simulation(
-        t, y0=None, volume=1.0, model=None, solver='ode',
-        is_netfree=False, species_list=None, without_reset=False,
-        return_type='matplotlib', opt_args=(), opt_kwargs=None,
-        structures=None, observers=(), progressbar=0, rndseed=None,
-        factory=None, ## deprecated
-        **kwargs):
+        t, y0=None, volume=1.0, model=None, solver='ode', ndiv=None,
+        species_list=None, structures=None, observers=(), rndseed=None):
     """Run a simulation with the given model and plot the result on IPython
     notebook with matplotlib.
 
@@ -124,202 +120,72 @@ def run_simulation(
         When tuple is given, the first value must be str as explained above.
         All the rest is used as arguments for the corresponding factory class.
         Keyword 's' is a shortcut for specifying 'solver'.
+    ndiv : int, optional
+        A number of time points. If t is an array, ignored. If None, log all.
     species_list : list of str, optional
         A list of names of Species observed. If None, log all.
         Default is None.
-    return_type : str, optional
-        Choose a type of return value from 'array', 'observer',
-        'matplotlib', 'nyaplot', 'world', 'dataframe', 'none' or None.
-        If None or 'none', return and plot nothing. Default is 'matplotlib'.
-        'dataframe' requires numpy and pandas libraries.
-        Keyword 'r' is a shortcut for specifying 'return_type'.
-    opt_args: list, tuple or dict, optional
-        Arguments for plotting. If return_type suggests no plotting, just ignored.
-    opt_kwargs: dict, optional
-        Arguments for plotting. If return_type suggests no plotting or
-        opt_args is a list or tuple, just ignored.
-        i.e.) viz.plot_number_observer(obs, *opt_args, **opt_kwargs)
-    is_netfree: bool, optional
-        Whether the model is netfree or not. When a model is given as an
-        argument, just ignored. Default is False.
     structures : list or dict, optional
         A dictionary which gives pairs of a name and shape of structures.
         Not fully supported yet.
     observers : Observer or list, optional
         A list of extra observer references.
-    progressbar : float, optional
-        A timeout for a progress bar in seconds.
-        When the value is not more than 0, show nothing.
-        Default is 0.
     rndseed : int, optional
         A random seed for a simulation.
         This argument will be ignored when 'solver' is given NOT as a string.
 
     Returns
     -------
-    value : list, TimingNumberObserver, World or None
-        Return a value suggested by ``return_type``.
-        When ``return_type`` is 'array', return a time course data.
-        When ``return_type`` is 'observer', return an observer.
-        When ``return_type`` is 'world', return the last state of ``World``.
-        Return nothing if else.
+    result : Result
 
     """
-    y0 = y0 or {}
-    opt_kwargs = opt_kwargs or {}
-    structures = structures or {}
+    session = Session(model=model, y0=y0, structures=structures, volume=volume)
+    ret = session.run(
+        t, solver=solver, rndseed=rndseed, ndiv=ndiv, species_list=species_list, observers=observers)
+    return ret
 
-    for key, value in kwargs.items():
-        if key == 'r':
-            return_type = value
-        elif key == 'v':
-            volume = value
-        elif key == 's':
-            solver = value
-        elif key == 'm':
-            model = value
-        else:
-            raise ValueError(
-                "An unknown keyword argument was given [{}={}]".format(key, value))
+def ensemble_simulations(
+        t, y0=None, volume=1.0, model=None, solver='ode', ndiv=None,
+        species_list=None, structures=None, observers=(), rndseed=None,
+        repeat=1, method=None,
+        **kwargs):
+    """
+    Run simulations multiple times and return its ensemble.
+    Arguments are almost same with ``ecell4.util.simulation.run_simulation``.
+    `observers` and `progressbar` is not available here.
 
-    import ecell4_base
+    Parameters
+    ----------
+    repeat : int, optional
+        A number of runs. Default is 1.
+    method : str, optional
+        The way for running multiple jobs.
+        Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
+        Default is None, which works as 'serial'.
+    **kwargs : dict, optional
+        Optional keyword arugments are passed through to `run_serial`,
+        `run_sge`, or `run_multiprocessing`.
+        See each function for more details.
 
-    if unit.HAS_PINT:
-        if isinstance(t, unit._Quantity):
-            if unit.STRICT and not unit.check_dimensionality(t, '[time]'):
-                raise ValueError("Cannot convert [t] from '{}' ({}) to '[time]'".format(t.dimensionality, t.u))
-            t = t.to_base_units().magnitude
+    Returns
+    -------
+    value : ResultList
 
-        if isinstance(volume, unit._Quantity):
-            if unit.STRICT:
-                if isinstance(volume.magnitude, ecell4_base.core.Real3) and not unit.check_dimensionality(volume, '[length]'):
-                    raise ValueError("Cannot convert [volume] from '{}' ({}) to '[length]'".format(
-                        volume.dimensionality, volume.u))
-                elif not unit.check_dimensionality(volume, '[volume]'):
-                    raise ValueError("Cannot convert [volume] from '{}' ({}) to '[volume]'".format(
-                        volume.dimensionality, volume.u))
-            volume = volume.to_base_units().magnitude
+    See Also
+    --------
+    ecell4.util.simulation.run_simulation
+    ecell4.extra.ensemble.run_serial
+    ecell4.extra.ensemble.run_sge
+    ecell4.extra.ensemble.run_slurm
+    ecell4.extra.ensemble.run_multiprocessing
+    ecell4.extra.ensemble.run_azure
 
-        if not isinstance(solver, str) and isinstance(solver, collections.Iterable):
-            solver = [
-                value.to_base_units().magnitude if isinstance(value, unit._Quantity) else value
-                for value in solver]
-
-    if factory is not None:
-        # f = factory  #XXX: will be deprecated in the future. just use solver
-        raise ValueError(
-            "Argument 'factory' is no longer available. Use 'solver' instead.")
-    elif isinstance(solver, str):
-        f = get_factory(solver)
-    elif isinstance(solver, collections.Iterable):
-        f = get_factory(*solver)
-    else:
-        f = solver
-
-    if rndseed is not None:
-        f = f.rng(ecell4_base.core.GSLRandomNumberGenerator(rndseed))
-
-    if model is None:
-        model = get_model(is_netfree, without_reset)
-
-    w = f.world(volume)
-    edge_lengths = w.edge_lengths()
-
-    if unit.HAS_PINT:
-        y0 = y0.copy()
-        for key, value in y0.items():
-            if isinstance(value, unit._Quantity):
-                if not unit.STRICT:
-                    y0[key] = value.to_base_units().magnitude
-                elif unit.check_dimensionality(value, '[substance]'):
-                    y0[key] = value.to_base_units().magnitude
-                elif unit.check_dimensionality(value, '[concentration]'):
-                    volume = w.volume() if not isinstance(w, ecell4_base.spatiocyte.SpatiocyteWorld) else w.actual_volume()
-                    y0[key] = value.to_base_units().magnitude * volume
-                else:
-                    raise ValueError(
-                        "Cannot convert a quantity for [{}] from '{}' ({}) to '[substance]'".format(
-                            key, value.dimensionality, value.u))
-
-    if not isinstance(w, ecell4_base.ode.ODEWorld):
-        w.bind_to(model)
-
-    for (name, shape) in (structures.items() if isinstance(structures, dict) else structures):
-        if isinstance(shape, str):
-            w.add_structure(ecell4_base.core.Species(name), get_shape(shape))
-        elif isinstance(shape, collections.Iterable):
-            w.add_structure(ecell4_base.core.Species(name), get_shape(*shape))
-        else:
-            w.add_structure(ecell4_base.core.Species(name), shape)
-
-    if isinstance(w, ecell4_base.ode.ODEWorld):
-        # w.bind_to(model)  # stop binding for ode
-        for serial, n in y0.items():
-            w.set_value(ecell4_base.core.Species(serial), n)
-    else:
-        # w.bind_to(model)
-        for serial, n in y0.items():
-            w.add_molecules(ecell4_base.core.Species(serial), n)
-
-    if not isinstance(t, collections.Iterable):
-        t = [float(t) * i / 100 for i in range(101)]
-
-    if species_list is not None:
-        obs = ecell4_base.core.TimingNumberObserver(t, species_list)
-    else:
-        obs = ecell4_base.core.TimingNumberObserver(t)
-    sim = f.simulator(w, model)
-    # sim = f.simulator(w)
-
-    if not isinstance(observers, collections.Iterable):
-        observers = (observers, )
-    if return_type not in ('world', 'none', None):
-        observers = (obs, ) + tuple(observers)
-
-    if progressbar > 0:
-        from .progressbar import progressbar as pb
-        pb(sim, timeout=progressbar, flush=True).run(t[-1], observers)
-    else:
-        sim.run(t[-1], observers)
-
-    if return_type in ('matplotlib', 'm'):
-        if isinstance(opt_args, (list, tuple)):
-            viz.plot_number_observer(obs, *opt_args, **opt_kwargs)
-        elif isinstance(opt_args, dict):
-            # opt_kwargs is ignored
-            viz.plot_number_observer(obs, **opt_args)
-        else:
-            raise ValueError('opt_args [{}] must be list or dict.'.format(
-                repr(opt_args)))
-    elif return_type in ('nyaplot', 'n'):
-        if isinstance(opt_args, (list, tuple)):
-            viz.plot_number_observer_with_nya(obs, *opt_args, **opt_kwargs)
-        elif isinstance(opt_args, dict):
-            # opt_kwargs is ignored
-            viz.plot_number_observer_with_nya(obs, **opt_args)
-        else:
-            raise ValueError('opt_args [{}] must be list or dict.'.format(
-                repr(opt_args)))
-    elif return_type in ('observer', 'o'):
-        return obs
-    elif return_type in ('array', 'a'):
-        return obs.data()
-    elif return_type in ('dataframe', 'd'):
-        import pandas
-        import numpy
-        data = numpy.array(obs.data()).T
-        return pandas.concat([
-            pandas.DataFrame(dict(Time=data[0], Value=data[i + 1],
-                                  Species=sp.serial(), **opt_kwargs))
-            for i, sp in enumerate(obs.targets())])
-    elif return_type in ('world', 'w'):
-        return sim.world()
-    elif return_type is None or return_type in ('none', ):
-        return
-    else:
-        raise ValueError(
-            'An invald value for "return_type" was given [{}].'.format(str(return_type))
-            + 'Use "none" if you need nothing to be returned.')
+    """
+    session = Session(model=model, y0=y0, structures=structures, volume=volume)
+    ret = session.ensemble(
+        t, solver=solver, rndseed=rndseed, ndiv=ndiv, species_list=species_list, observers=observers,
+        repeat=repeat, method=method, **kwargs)
+    return ret
 
 def number_observer(t=None, targets=None):
     """

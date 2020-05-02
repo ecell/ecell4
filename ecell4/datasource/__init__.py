@@ -1,3 +1,5 @@
+# from . import biocyc, biogrid, ecocyc, pdb, psicquic, pubmed.py, rdf, sbml, sparql, uniprot
+
 def print_descriptions(desc):
     for i, entry in enumerate(desc):
         if i > 0:
@@ -56,4 +58,6 @@ def whereis(entity, collections=None):
     print_descriptions(desc)
 
 
-__all__ = ['description', 'whereis']
+from .pubmed import citation
+
+__all__ = ['description', 'whereis', 'citation']

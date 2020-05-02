@@ -11,12 +11,21 @@ from ..extra import unit
 
 import ecell4_base.core
 
-RATELAW_RESERVED_FUNCTIONS = {
-    'pow': pow, 'exp': math.exp, 'log': math.log,
-    'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
-    'asin': math.asin, 'acos': math.acos, 'atan': math.atan,
-    'abs': abs,
-    }
+try:
+    import numpy
+    RATELAW_RESERVED_FUNCTIONS = {
+        'pow': numpy.power, 'exp': numpy.exp, 'log': numpy.log,
+        'sin': numpy.sin, 'cos': numpy.cos, 'tan': numpy.tan,
+        'asin': numpy.arcsin, 'acos': numpy.arccos, 'atan': numpy.arctan,
+        'abs': numpy.fabs, 'sqrt': numpy.sqrt,
+        }
+except ImportError:
+    RATELAW_RESERVED_FUNCTIONS = {
+        'pow': pow, 'exp': math.exp, 'log': math.log,
+        'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
+        'asin': math.asin, 'acos': math.acos, 'atan': math.atan,
+        'abs': abs, 'sqrt': math.sqrt,
+        }
 
 RATELAW_RESERVED_CONSTANTS = {
     '_t': None,  #XXX: just reserved
@@ -263,7 +272,7 @@ class SpeciesParsingVisitor(Visitor):
 
     def visit_default(self, obj):
         if (not isinstance(obj, (numbers.Real, ecell4_base.core.Quantity_Real, ecell4_base.core.Quantity_Integer))
-                and not (str(obj) in RATELAW_RESERVED_CONSTANTS and RATELAW_RESERVED_CONSTANTS[str(obj)] is None)):
+                and str(obj) not in RATELAW_RESERVED_CONSTANTS):
             raise TypeError("An invalid type '{}' was given [{}].".format(type(obj).__name__, obj))
         return Visitor.visit_default(self, obj)
 

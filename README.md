@@ -47,8 +47,7 @@ Run this with Jupyter Notebook
 
 ```python
 %matplotlib inline
-from ecell4_base.core import *
-from ecell4 import *
+from ecell4.prelude import *
 
 with species_attributes():
     M | {'dimension': 2}
@@ -60,7 +59,7 @@ run_simulation(
     0.4, y0={'A': 10}, structures={'M': surface},
     solver='spatiocyte', observers=obs, return_type=None)
 
-viz.plot_trajectory(obs, interactive=False)
+show(obs, interactive=False)
 ```
 
 ![png](./samples/hairball.png)

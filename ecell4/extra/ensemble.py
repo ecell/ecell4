@@ -19,6 +19,77 @@ from . import sge
 from . import slurm
 
 
+def run_ensemble(target, jobs, repeat=1, method=None, **kwargs):
+    """
+    Evaluate the given function with each set of arguments, and return a list of results.
+
+    Parameters
+    ----------
+    target : function
+        A function to be evaluated. The function must accepts three arguments,
+        which are a list of arguments given as `jobs`, a job and task id (int).
+    jobs : list
+        A list of arguments passed to the function.
+    repeat : int, optional
+        A number of tasks. Repeat the evaluation `n` times for each job.
+        1 for default.
+    method : str, optional
+        The way for running multiple jobs.
+        Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
+        Default is None, which works as 'serial'.
+
+    Returns
+    -------
+    results : list
+        A list of results. Each element is a list containing `repeat` results.
+
+    See Also
+    --------
+    ecell4.extra.ensemble.run_serial
+    ecell4.extra.ensemble.run_sge
+    ecell4.extra.ensemble.run_slurm
+    ecell4.extra.ensemble.run_multiprocessing
+    ecell4.extra.ensemble.run_azure
+
+    """
+    config = None
+    config_filename = 'ecell4.yml'
+    if os.path.isfile(config_filename):
+        import yaml
+        try:
+            from yaml import CLoader as Loader
+        except ImportError:
+            from yaml import Loader
+        with open(config_filename) as f:
+            config_ = yaml.load(f.read(), Loader=Loader)
+        if 'ensemble' in config_:
+            config = config_['ensemble']
+
+    if method is None:
+        if config is None or 'method' not in config:
+            method = 'serial'  # default
+        else:
+            method = config['method']
+    method = method.lower()
+
+    if config is not None and method in config:
+        kwargs_ = config[method]
+        kwargs = dict(kwargs_, **kwargs)
+
+    if method == "serial":
+        return run_serial(target, jobs, n=repeat, **kwargs)
+    elif method == "sge":
+        return run_sge(target, jobs, n=repeat, **kwargs)
+    elif method == "slurm":
+        return run_slurm(target, jobs, n=repeat, **kwargs)
+    elif method == "multiprocessing":
+        return run_multiprocessing(target, jobs, n=repeat, **kwargs)
+    elif method == "azure":
+        return run_azure(target, jobs, n=repeat, **kwargs)
+
+    raise ValueError(
+        'Argument "method" must be either "serial", "multiprocessing", "slurm", "sge" or "azure".')
+
 def run_serial(target, jobs, n=1, **kwargs):
     """
     Evaluate the given function with each set of arguments, and return a list of results.
@@ -68,7 +139,7 @@ def run_serial(target, jobs, n=1, **kwargs):
     ecell4.extra.ensemble.run_azure
 
     """
-    return [[target(copy.copy(job), i + 1, j + 1) for j in range(n)] for i, job in enumerate(jobs)]
+    return [[target(copy.deepcopy(job), i + 1, j + 1) for j in range(n)] for i, job in enumerate(jobs)]
 
 def run_multiprocessing(target, jobs, n=1, nproc=None, **kwargs):
     """
@@ -217,7 +288,6 @@ def run_sge(target, jobs, n=1, nproc=None, path='.', delete=True, wait=True, env
     if isinstance(target, types.LambdaType) and target.__name__ == "<lambda>":
         raise RuntimeError("A lambda function is not accepted")
 
-    # src = textwrap.dedent(inspect.getsource(singlerun)).replace(r'"', r'\"')
     src = textwrap.dedent(inspect.getsource(target)).replace(r'"', r'\"')
     if re.match('[\s\t]+', src.split('\n')[0]) is not None:
         raise RuntimeError(
@@ -393,7 +463,6 @@ def run_slurm(target, jobs, n=1, nproc=None, path='.', delete=True, wait=True, e
     if isinstance(target, types.LambdaType) and target.__name__ == "<lambda>":
         raise RuntimeError("A lambda function is not accepted")
 
-    # src = textwrap.dedent(inspect.getsource(singlerun)).replace(r'"', r'\"')
     src = textwrap.dedent(inspect.getsource(target)).replace(r'"', r'\"')
     if re.match('[\s\t]+', src.split('\n')[0]) is not None:
         raise RuntimeError(
@@ -560,219 +629,6 @@ def getseed(myseed, i):
     rndseed = int(myseed[(i - 1) * 8: i * 8], 16)
     rndseed = rndseed % (2 ** 31)  #XXX: trancate the first bit
     return rndseed
-
-#XXX:
-#XXX:
-#XXX:
-
-def singlerun(job, job_id, task_id):
-    import ecell4.util.simulation
-    import ecell4.extra.ensemble
-    rndseed = ecell4.extra.ensemble.getseed(job.pop('myseed'), task_id)
-    job.update({'return_type': 'array', 'rndseed': rndseed})
-    data = ecell4.util.simulation.run_simulation(**job)
-    return data
-
-import ecell4.util.decorator
-import ecell4.util.simulation
-import ecell4.util.viz
-import ecell4_base.core
-# import ecell4_base.ode
-
-def list_species(model, seeds=None):
-    """This function is deprecated."""
-    seeds = None or []
-
-    from ecell4_base.core import Species
-
-    if not isinstance(seeds, list):
-        seeds = list(seeds)
-
-    expanded = model.expand([Species(serial) for serial in seeds])
-    species_list = [sp.serial() for sp in expanded.list_species()]
-    species_list = sorted(set(seeds + species_list))
-    return species_list
-
-## observers=(), progressbar=0
-def ensemble_simulations(
-    t, y0=None, volume=1.0, model=None, solver='ode',
-    is_netfree=False, species_list=None, without_reset=False,
-    return_type='matplotlib', opt_args=(), opt_kwargs=None,
-    structures=None, rndseed=None,
-    n=1, nproc=None, method=None, errorbar=True,
-    **kwargs):
-    """
-    Run simulations multiple times and return its ensemble.
-    Arguments are almost same with ``ecell4.util.simulation.run_simulation``.
-    `observers` and `progressbar` is not available here.
-
-    Parameters
-    ----------
-    n : int, optional
-        A number of runs. Default is 1.
-    nproc : int, optional
-        A number of processors. Ignored when method='serial'.
-        Default is None.
-    method : str, optional
-        The way for running multiple jobs.
-        Choose one from 'serial', 'multiprocessing', 'sge', 'slurm', 'azure'.
-        Default is None, which works as 'serial'.
-    **kwargs : dict, optional
-        Optional keyword arugments are passed through to `run_serial`,
-        `run_sge`, or `run_multiprocessing`.
-        See each function for more details.
-
-    Returns
-    -------
-    value : list, DummyObserver, or None
-        Return a value suggested by ``return_type``.
-        When ``return_type`` is 'array', return a time course data.
-        When ``return_type`` is 'observer', return a DummyObserver.
-        DummyObserver is a wrapper, which has the almost same interface
-        with NumberObservers.
-        Return nothing if else.
-
-    See Also
-    --------
-    ecell4.util.simulation.run_simulation
-    ecell4.extra.ensemble.run_serial
-    ecell4.extra.ensemble.run_sge
-    ecell4.extra.ensemble.run_slurm
-    ecell4.extra.ensemble.run_multiprocessing
-    ecell4.extra.ensemble.run_azure
-
-    """
-    y0 = y0 or {}
-    opt_kwargs = opt_kwargs or {}
-    structures = structures or {}
-
-    for key, value in kwargs.items():
-        if key == 'r':
-            return_type = value
-        elif key == 'v':
-            volume = value
-        elif key == 's':
-            solver = value
-        elif key == 'm':
-            model = value
-
-    if model is None:
-        model = ecell4.util.decorator.get_model(is_netfree, without_reset)
-
-    if species_list is None:
-        species_list = list_species(model, y0.keys())
-
-    if rndseed is None:
-        myseed = genseeds(n)
-    elif (not isinstance(rndseed, bytes) or len(rndseed) != n * 4 * 2):
-        raise ValueError(
-            "A wrong seed for the random number generation was given. Use 'genseeds'.")
-
-    jobs = [{'t': t, 'y0': y0, 'volume': volume, 'model': model, 'solver': solver, 'species_list': species_list, 'structures': structures, 'myseed': myseed}]
-
-    if method is None or method.lower() == "serial":
-        retval = run_serial(singlerun, jobs, n=n, **kwargs)
-    elif method.lower() == "sge":
-        retval = run_sge(singlerun, jobs, n=n, nproc=nproc, **kwargs)
-    elif method.lower() == "slurm":
-        retval = run_slurm(singlerun, jobs, n=n, nproc=nproc, **kwargs)
-    elif method.lower() == "multiprocessing":
-        retval = run_multiprocessing(singlerun, jobs, n=n, nproc=nproc, **kwargs)
-    elif method.lower() == "azure":
-        retval = run_azure(singlerun, jobs, n=n, nproc=nproc, **kwargs)
-    else:
-        raise ValueError(
-            'Argument "method" must be one of "serial", "multiprocessing", "slurm" and "sge".')
-
-    if return_type is None or return_type in ("none", ):
-        return
-
-    assert len(retval) == len(jobs) == 1
-
-    if return_type in ("array", 'a'):
-        return retval[0]
-
-    import numpy
-
-    class DummyObserver:
-
-        def __init__(self, inputs, species_list, errorbar=True):
-            if len(inputs) == 0:
-                raise ValueError("No input was given.")
-
-            t = numpy.array(inputs[0], numpy.float64).T[0]
-            mean = sum([numpy.array(data, numpy.float64).T[1: ] for data in inputs])
-            mean /= len(inputs)
-
-            self.__data = numpy.vstack([t, mean]).T
-
-            if errorbar:
-                var = sum([(numpy.array(data, numpy.float64).T[1: ] - mean) ** 2
-                             for data in inputs]) / len(inputs)
-                stdev = numpy.sqrt(var)
-                stder = stdev / numpy.sqrt(len(inputs))
-                # self.__error = numpy.vstack([t, stdev]).T
-                self.__error = numpy.vstack([t, stder]).T
-            else:
-                self.__error = None
-
-            self.__species_list = [ecell4_base.core.Species(serial) for serial in species_list]
-
-        def targets(self):
-            return self.__species_list
-
-        def data(self):
-            return self.__data
-
-        def t(self):
-            return self.__data.T[0]
-
-        def error(self):
-            return self.__error
-
-        def save(self, filename):
-            with open(filename, 'w') as fout:
-                writer = csv.writer(fout, delimiter=',', lineterminator='\n')
-                writer.writerow(['"{}"'.format(sp.serial()) for sp in self.__species_list])
-                writer.writerows(self.data())
-
-    if return_type in ("matplotlib", 'm'):
-        if isinstance(opt_args, (list, tuple)):
-            ecell4.util.viz.plot_number_observer_with_matplotlib(
-                DummyObserver(retval[0], species_list, errorbar), *opt_args, **opt_kwargs)
-        elif isinstance(opt_args, dict):
-            # opt_kwargs is ignored
-            ecell4.util.viz.plot_number_observer_with_matplotlib(
-                DummyObserver(retval[0], species_list, errorbar), **opt_args)
-        else:
-            raise ValueError('opt_args [{}] must be list or dict.'.format(
-                repr(opt_args)))
-    elif return_type in ("nyaplot", 'n'):
-        if isinstance(opt_args, (list, tuple)):
-            ecell4.util.viz.plot_number_observer_with_nya(
-                DummyObserver(retval[0], species_list, errorbar), *opt_args, **opt_kwargs)
-        elif isinstance(opt_args, dict):
-            # opt_kwargs is ignored
-            ecell4.util.viz.plot_number_observer_with_nya(
-                DummyObserver(retval[0], species_list, errorbar), **opt_args)
-        else:
-            raise ValueError('opt_args [{}] must be list or dict.'.format(
-                repr(opt_args)))
-    elif return_type in ("observer", 'o'):
-        return DummyObserver(retval[0], species_list, errorbar)
-    elif return_type in ("dataframe", 'd'):
-        import pandas
-        return [
-            pandas.concat([
-                pandas.DataFrame(dict(Time=numpy.array(data).T[0],
-                                      Value=numpy.array(data).T[i + 1],
-                                      Species=serial))
-                for i, serial in enumerate(species_list)])
-            for data in retval[0]]
-    else:
-        raise ValueError(
-            'An invald value for "return_type" was given [{}].'.format(str(return_type))
-            + 'Use "none" if you need nothing to be returned.')
 
 
 if __name__ == "__main__":
