@@ -4,7 +4,6 @@ from .session import load_world, Session
 from .decorator import get_model, reset_model
 from . import viz
 from ..extra import unit
-from ..extra.ensemble import ensemble_simulations
 
 
 def load_world(filename):
