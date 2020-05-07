@@ -58,7 +58,7 @@ def getUnitRegistry(length="meter", time="second", substance="item", volume=None
 
     """
     ureg = pint.UnitRegistry()
-    ureg.define('item = mole / (avogadro_number * 1 mole)')
+    ureg.define('item = mole / avogadro_number')
     assert ureg.Quantity(1, 'item').check('[substance]')
 
     try:
