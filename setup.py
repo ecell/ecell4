@@ -18,7 +18,7 @@ setup(
         "templates/*.tmpl", "templates/ecelllogo/*.png"]},
     url='https://github.com/ecell/ecell4',
     license='the GNU General Public License v3',
-    extras_require={"all": ["plotly", "pint>=0.11"]},
+    extras_require={"all": ["plotly", "pint>=0.11", "numpy-stl", "pyyaml"]},
     author='Kazunari Kaizu',
     author_email='kaizu@riken.jp',
     description=DESCRIPTION,
