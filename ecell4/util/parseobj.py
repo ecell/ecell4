@@ -162,10 +162,10 @@ class ParseElem:
                 attrs += ["%s" % str(v) for v in self.args]
             if self.kwargs is not None:
                 attrs += ["%s=%s" % (k, v) for k, v in self.kwargs.items()]
-            label += "(%s)" % (", ".join(attrs))
+            label += "(%s)" % (",".join(attrs))
 
         if self.modification is not None:
-            label += " ^ %s" % str(self.modification)
+            label += "^%s" % str(self.modification)
         if self.key is not None:
             label += "[%s]" % str(self.key)
         return label
