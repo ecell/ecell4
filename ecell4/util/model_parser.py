@@ -106,6 +106,11 @@ def generate_reaction_rule_options(elements):
                 opts['policy'] = elem
             else:
                 opts['policy'] = opts['policy'] | elem
+        elif isinstance(elem, dict):
+            if 'attributes' not in opts.keys():
+                opts['attributes'] = copy.deepcopy(elem)
+            else:
+                opts['attributes'].update(copy.deepcopy(elem))
         else:
             if 'k' in opts.keys():
                 raise RuntimeError(
@@ -114,11 +119,25 @@ def generate_reaction_rule_options(elements):
             opts['k'] = elem
     return opts
 
-def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit=True):
+def generate_reaction_rule(lhs, rhs, k=None, policy=None, ratelaw=True, implicit=True, attributes=None):
     if k is None:
         raise RuntimeError('A kinetic rate must be given.')
 
     rr = ecell4_base.core.ReactionRule([sp for (sp, _) in lhs], [sp for (sp, _) in rhs])
+
+    if attributes is not None:
+        assert isinstance(attributes, dict)
+        for key, value in attributes.items():
+            if not isinstance(key, str):
+                raise TypeError(
+                    "Attribute key must be string."
+                    " '{}' was given [{}].".format(type(key).__name__, key))
+            value = as_quantity(value)
+            if not isinstance(value, (numbers.Real, str, bool, ecell4_base.core.Quantity_Integer, ecell4_base.core.Quantity_Real)):
+                raise TypeError(
+                    "Attribute value must be int, float, string, boolean or Quantity."
+                    " '{}' was given [{}].".format(type(value).__name__, value))
+            rr.set_attribute(key, value)
 
     if (callable(k)  # Function
             or (ratelaw and isinstance(k, (parseobj.ExpBase, parseobj.AnyCallable)))  # Formula
