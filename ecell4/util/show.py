@@ -40,7 +40,14 @@ def _show_reaction_rule(rr, f=sys.stdout):
         rhs = ' + '.join('{:g} * {:s}'.format(coef, sp.serial()) if coef != 1 else sp.serial() for sp, coef in zip(rr.products(), desc.product_coefficients()))
         k = desc.as_string()
 
-    f.write("{:s} > {:s} | {:s}\n".format(lhs, rhs, k))
+    attributes = rr.list_attributes()
+    if len(attributes) == 0:
+        attributes = ""
+    else:
+        attributes = ', '.join("'{:s}': {:s}".format(key, _as_string(val)) for key, val in attributes)
+        attributes = " | {{{:s}}}".format(attributes)
+
+    f.write("{:s} > {:s} | {:s}{:s}\n".format(lhs, rhs, k, attributes))
 
 def _show_model(m, f=sys.stdout):
     for sp, proceed in zip(m.species_attributes(), m.species_attributes_proceed()):

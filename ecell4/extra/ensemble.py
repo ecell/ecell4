@@ -53,7 +53,7 @@ def run_ensemble(target, jobs, repeat=1, method=None, **kwargs):
 
     """
     config = None
-    config_filename = 'ecell4.yml'
+    config_filename = 'config.yaml'
     if os.path.isfile(config_filename):
         import yaml
         try:

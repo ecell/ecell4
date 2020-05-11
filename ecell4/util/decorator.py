@@ -160,12 +160,12 @@ class ReactionRulesCallback(Callback):
                     "Parameter must have size, 2."
                     " '{}' was given [{}].".format(len(params), params))
 
-            return (generate_reaction_rule(reactants, products, as_quantity(params[0]), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION),
-                    generate_reaction_rule(products, reactants, as_quantity(params[1]), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION))
+            return (generate_reaction_rule(reactants, products, as_quantity(params[0]), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION, opts.get('attributes')),
+                    generate_reaction_rule(products, reactants, as_quantity(params[1]), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION, opts.get('attributes')))
         elif isinstance(obj, parseobj.GtExp):
-            return (generate_reaction_rule(reactants, products, as_quantity(params), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION), )
+            return (generate_reaction_rule(reactants, products, as_quantity(params), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION, opts.get('attributes')), )
         elif isinstance(obj, parseobj.LtExp):
-            return (generate_reaction_rule(products, reactants, as_quantity(params), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION), )
+            return (generate_reaction_rule(products, reactants, as_quantity(params), opts.get('policy'), ENABLE_RATELAW, ENABLE_IMPLICIT_DECLARATION, opts.get('attributes')), )
 
 def get_model(is_netfree=False, without_reset=False, seeds=None, effective=False):
     """
