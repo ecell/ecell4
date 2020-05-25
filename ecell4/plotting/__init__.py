@@ -46,7 +46,7 @@ def plot_number_observer(*args, backend=None, **kwargs):
 
     """
     if backend == 'matplotlib':
-        _matplotlib.plot_number_observer(*args, **kwargs)
+        return _matplotlib.plot_number_observer(*args, **kwargs)
     elif backend == 'plotly':
         from . import _plotly
         return _plotly.plot_number_observer(*args, **kwargs)
@@ -77,7 +77,7 @@ def plot_world(*args, backend=None, **kwargs):
 
     """
     if backend == 'matplotlib':
-        _matplotlib.plot_world(*args, **kwargs)
+        return _matplotlib.plot_world(*args, **kwargs)
     elif backend == 'plotly':
         from . import _plotly
         return _plotly.plot_world(*args, **kwargs)
@@ -129,7 +129,7 @@ def plot_trajectory(*args, backend=None, **kwargs):
 
     """
     if backend == 'matplotlib':
-        _matplotlib.plot_trajectory(*args, **kwargs)
+        return _matplotlib.plot_trajectory(*args, **kwargs)
     elif backend == 'plotly':
         from . import _plotly
         return _plotly.plot_trajectory(*args, **kwargs)
