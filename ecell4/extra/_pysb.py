@@ -183,10 +183,14 @@ def convert(model, y0, name="MODEL", prefix="_", _export=False):
             {key: value for key, value in sites.items() if len(value) != 0})
 
     ignore = []
+    count = 0
     for i, rr in enumerate(model.reaction_rules()):
         #XXX: Concat reversible reactions if exists. Avoid a problem in `pyvipr.pysb_viz.sp_rules_view`
         if i in ignore:
             continue
+
+        name = f'{prefix}RULE{count}'
+
         kr = None
         rev = ecell4_base.core.ReactionRule(rr.products(), rr.reactants(), 0.0)
         for j, another in enumerate(model.reaction_rules()[i + 1: ]):
@@ -199,9 +203,9 @@ def convert(model, y0, name="MODEL", prefix="_", _export=False):
                     raise RuntimeError("A reaction is duplicated [{}]".format(another.as_string()))
                 kr = ret.add_parameter(f'{name}_kr', another.k())
 
-        name = f'{prefix}RULE{i}'
         kf = ret.add_parameter(f'{name}_kf', rr.k())
         ret.add_rule(name, export_species(rr.reactants(), ret), export_species(rr.products(), ret), kf, kr)
+        count += 1
 
     for i, (key, value) in enumerate(sorted(y0.items())):
         name = f'{prefix}INITIAL{i}'
