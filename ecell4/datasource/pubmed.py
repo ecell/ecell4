@@ -96,7 +96,8 @@ class PubMedDataSource(object):
             for item in entry_node.getElementsByTagName('Item'):
                 name = item.getAttribute('Name')
                 if name in ('Title', 'Volume', 'Issue', 'Pages', 'Source', 'PubDate', 'SO', 'DOI', 'FullJournalName'):
-                    entry[name] = item.firstChild.data
+                    if item.firstChild is not None:
+                        entry[name] = item.firstChild.data
                 elif name == 'AuthorList':
                     entry['AuthorList'] = [author.firstChild.data for author in item.getElementsByTagName('Item') if author.getAttribute('Name') == 'Author']
             retval.append(entry)
@@ -128,7 +129,8 @@ class Formatter(object):
             return None
         authors = ', '.join(self.src.data['AuthorList'])
         year = self.src.data['PubDate'].strip().split(' ')[0]
-        return "{Authors}, {Title} {FullJournalName}, {Issue}({Volume}), {Pages}, {Year}. {DOI}. PubMed MPID: {ID}.".format(Authors=authors, Year=year, **self.src.data)
+        data = {key: self.src.data.get(key, '') for key in ('Title', 'FullJournalName', 'Issue', 'Volume', 'Pages', 'DOI', 'ID')}
+        return "{Authors}, {Title} {FullJournalName}, {Issue}({Volume}), {Pages}, {Year}. {DOI}. PubMed MPID: {ID}.".format(Authors=authors, Year=year, **data)
 
     def _ipython_display_(self):
         if self.src is None:
@@ -138,7 +140,12 @@ class Formatter(object):
         year = self.src.data['PubDate'].strip().split(' ')[0]
         doi_url = 'https://doi.org/{}'.format(self.src.data['DOI'])
         url = self.src.link(self.src.data['ID'])
-        text = "{Authors}, {Title} *{FullJournalName}*, **{Issue}**({Volume}), {Pages}, {Year}. [{DOI}]({DOI_URL}). PubMed PMID: [{ID}]({URL}).".format(Authors=authors, Year=year, DOI_URL=doi_url, URL=url, **self.src.data)
+        data = {key: self.src.data.get(key, '') for key in ('Title', 'FullJournalName', 'Issue', 'Volume', 'Pages', 'DOI', 'ID')}
+        if data["Issue"] != "":
+            data["Issue"] = "**{}**".format(data["Issue"])
+        if data["FullJournalName"] != "":
+            data["FullJournalName"] = "*{}*".format(data["FullJournalName"])
+        text = "{Authors}, {Title} {FullJournalName}, {Issue}({Volume}), {Pages}, {Year}. [{DOI}]({DOI_URL}). PubMed PMID: [{ID}]({URL}).".format(Authors=authors, Year=year, DOI_URL=doi_url, URL=url, **data)
         display(Markdown(text))
 
 def citation(entity, formatter=Formatter):
