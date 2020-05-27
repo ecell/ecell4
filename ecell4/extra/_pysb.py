@@ -233,9 +233,3 @@ def export_simulation_result(ret, model, y0=None):
             None, tout, trajectories=trajectories, model=model,
             initials=initials, param_values=param_values)
     return obj
-
-def sp_rules_view(model, y0):
-    return pyvipr.pysb_viz.sp_rules_view(export_model(model, y0))
-
-def sp_dyn_view(ret, model, y0=None):
-    return pyvipr.pysb_viz.sp_dyn_view(export_simulation_result(ret, model, y0))
