@@ -1,8 +1,14 @@
 import numbers, operator, itertools, functools
 from collections.abc import Iterable
+import numpy
 
 import ecell4_base.core
 import pysb
+import pysb.bng
+import pysb.simulator
+
+import pyvipr.pysb_viz
+
 
 class PySBModel(object):
 
@@ -110,16 +116,16 @@ def list_monomers(obj, monomers=None):
                 monomers[obj.name()][name].append(state)
     return monomers
 
-def port_species(obj, model):
+def export_species(obj, model):
     if isinstance(obj, Iterable):
-        return [port_species(obj_, model) for obj_ in obj]
+        return [export_species(obj_, model) for obj_ in obj]
 
     assert isinstance(obj, ecell4_base.core.Species)
-    units = [port_unit_species(usp, model) for usp in obj.units()]
+    units = [export_unit_species(usp, model) for usp in obj.units()]
     assert len(units) != 0
     return functools.reduce(operator.mod, units)
 
-def port_unit_species(obj, model):
+def export_unit_species(obj, model):
     assert isinstance(obj, ecell4_base.core.UnitSpecies)
     opts = {}
     for name, (state, bond) in obj.sites():
@@ -142,6 +148,28 @@ def port_unit_species(obj, model):
             else:
                 raise ValueError(f"Not supported {obj.serial()}")
     return model.monomers[obj.name()](**opts)
+
+def import_species(obj):
+    assert isinstance(obj, pysb.core.ComplexPattern)
+    sp = ecell4_base.core.Species()
+    for monomer in obj.monomer_patterns:
+        assert isinstance(monomer, pysb.core.MonomerPattern)
+        site_conditions = monomer.site_conditions
+        monomer = monomer.monomer
+        usp = ecell4_base.core.UnitSpecies(monomer.name)
+        for key, value in site_conditions.items():
+            if isinstance(value, tuple):
+                assert len(value) == 2
+                assert isinstance(value[0], str)
+                assert value[1] is None or isinstance(value[1], int)
+                usp.add_site(key, value[0], str(value[1]) if value[1] is not None else "")
+            elif isinstance(value, str):
+                usp.add_site(key, value, "")
+            else:
+                assert value is None or isinstance(value, int)
+                usp.add_site(key, "", str(value) if value is not None else "")
+        sp.add_unit(usp)
+    return sp
 
 def convert(model, y0, name="MODEL", prefix="_", _export=False):
     assert isinstance(model, ecell4_base.core.NetfreeModel)  #XXX
@@ -173,11 +201,35 @@ def convert(model, y0, name="MODEL", prefix="_", _export=False):
 
         name = f'{prefix}RULE{i}'
         kf = ret.add_parameter(f'{name}_kf', rr.k())
-        ret.add_rule(name, port_species(rr.reactants(), ret), port_species(rr.products(), ret), kf, kr)
+        ret.add_rule(name, export_species(rr.reactants(), ret), export_species(rr.products(), ret), kf, kr)
 
-    for i, (key, value) in enumerate(y0.items()):
+    for i, (key, value) in enumerate(sorted(y0.items())):
         name = f'{prefix}INITIAL{i}'
         p = ret.add_parameter(name, value)
-        ret.add_initial(port_species(ecell4_base.core.Species(key), ret), p)
+        ret.add_initial(export_species(ecell4_base.core.Species(key), ret), p)
 
+    pysb.bng.generate_equations(ret.get(), cleanup=True, verbose=False)
     return ret
+
+def export_model(model, y0, name="MODEL", prefix="_", _export=False):
+    m = convert(model, y0, name, prefix, _export)
+    return m.get()
+
+def export_simulation_result(ret, model, y0=None):
+    if not isinstance(model, pysb.core.Model):
+        if y0 is None:
+            raise RuntimeError("`y0` is required.")
+        model = export_model(model, y0)
+
+    species = [import_species(sp).serial() for sp in model.species]
+    data = ret.as_array().T
+    from ecell4.plotting._core import eval_key
+    trajectories = [numpy.array([eval_key(key, ret.targets(), data)[0] for key in species]).T]
+    tout = [ret.as_array().T[0]]
+    initials = numpy.array([initial.value for initial in model.initials])
+    param_values = [[param.value for param in model.parameters]]
+
+    obj = pysb.simulator.SimulationResult(
+            None, tout, trajectories=trajectories, model=model,
+            initials=initials, param_values=param_values)
+    return obj

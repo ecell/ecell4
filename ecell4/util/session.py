@@ -407,7 +407,13 @@ class Session(object):
             observers = (observers, )
         observers = (obs, ) + tuple(observers)
 
-        sim = f.simulator(w, self.model)
+        if isinstance(f, ecell4_base.ode.ODEFactory) and not self.model.is_static():
+            warnings.warn("The ODE solver requires a `NetworkModel`. Use `expand`.")
+            model = self.model.expand(w.list_species())
+        else:
+            model = self.model
+
+        sim = f.simulator(w, model)
         sim.run(upto, observers)
 
         return Result(w, observers)
