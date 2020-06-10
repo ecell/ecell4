@@ -1,20 +1,9 @@
-import uuid
 import json
 import os
 import re
 import pkgutil
 from collections import defaultdict
-from jinja2 import Template
-from IPython.core.display import display, HTML
-
-def init_cyjs():
-    from IPython.core.display import display, HTML
-    # path = os.path.abspath(os.path.dirname(__file__)) + '/templates/init_cyjs.js'
-    # # print path
-    # html = open(path).read()
-    package_name, tmpl_path = 'ecell4.util', 'templates/init_cyjs.js'
-    html = pkgutil.get_data(package_name, tmpl_path).decode()
-    return display(HTML(html))
+import ipycytoscape
 
 def plot_species(species):
     nodes = []
@@ -66,8 +55,8 @@ def plot_species(species):
     for i in binds.items():
         edges.append({ 'data': { 'id': i[0], 'source': i[1][0], 'target': i[1][1] } })
     # print json.dumps(edges)
-
-    package_name, tmpl_path = 'ecell4.util', 'templates/template.html'
-    template = Template(pkgutil.get_data(package_name, tmpl_path).decode())
-    html = template.render(nodes=json.dumps(nodes), edges = json.dumps(edges), uuid="cy" + str(uuid.uuid4()))
-    return display(HTML(html))
+    r = json.dumps({'nodes': nodes, 'edges': edges})
+    cytoscapeobj = ipycytoscape.CytoscapeWidget()
+    cytoscapeobj.graph.add_graph_from_json(json.loads(r))
+    #print({'nodes': nodes, 'edges': edges})
+    return(cytoscapeobj)
