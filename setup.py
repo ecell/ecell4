@@ -25,7 +25,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     install_requires=[
-        "ecell4-base>=2.0.5",
+        "ecell4-base>=2.1.0",
         "matplotlib"
     ]
 )
