@@ -9,15 +9,23 @@ from ..util.decorator_base import just_parse
 from ..util import model_parser
 
 import pint
-from pint.quantity import _Quantity
-from pint.unit import _Unit
-# from pint.errors import UndefinedUnitError
 from pint.errors import DimensionalityError
+
+try:
+    # Pint older versions (if still available)
+    from pint.quantity import _Quantity  # type: ignore
+    from pint.unit import _Unit  # type: ignore
+except ModuleNotFoundError:
+    # Pint >= 0.20+: don't rely on private modules
+    _Quantity = pint.Quantity  # public API
+    # Unit type isn't meant to be imported; keep for typing/export compatibility
+    _Unit = object
 
 
 __all__ = [
-    'getUnitRegistry', '_Quantity', '_Unit', 'wrap_quantity',
-    'get_application_registry', 'check_model', 'DimensionalityMismatchError']
+    'getUnitRegistry', '_Quantity', 'wrap_quantity',
+    'get_application_registry', 'check_model', 'DimensionalityMismatchError'
+]
 
 def wrapped_binary_operator(op1, op2):
     def wrapped(self, other):
