@@ -7,3 +7,7 @@ docs/build
 .cache/
 .idea/
 .pytest_cache/
+*.h5
+.claude/
+tutorial*.py
+tutorial*.ipynb

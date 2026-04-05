@@ -176,7 +176,7 @@ def __prepare_mplot3d_with_matplotlib(
     import matplotlib.pyplot as plt
 
     fig = plt.figure(figsize=(figsize, figsize))
-    ax = fig.gca(projection='3d')
+    ax = fig.add_subplot(111, projection='3d')
 
     if wireframe:
         ax.w_xaxis.set_pane_color((0, 0, 0, 0))
