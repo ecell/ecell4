@@ -10,10 +10,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write  # needed for Trusted Publishing
-      contents: read
 
+    permissions:
+      id-token: write
+      contents: write
+   
     steps:
       - uses: actions/checkout@v4
 
