@@ -46,10 +46,6 @@ jobs:
         if: steps.version_check.outputs.changed == 'true'
         run: python -m build
 
-      - name: Publish to PyPI
-        if: steps.version_check.outputs.changed == 'true'
-        uses: pypa/gh-action-pypi-publish@release/v1
-
       - name: Create GitHub Release
         if: steps.version_check.outputs.changed == 'true'
         env:
