@@ -46,15 +46,17 @@ def plot_number_observer(*args, backend=None, **kwargs):
 
     """
     if backend == 'matplotlib':
-        _matplotlib.plot_number_observer(*args, **kwargs)
+        return _matplotlib.plot_number_observer(*args, **kwargs)
     elif backend == 'plotly':
         from . import _plotly
-        _plotly.plot_number_observer(*args, **kwargs)
+        return _plotly.plot_number_observer(*args, **kwargs)
     elif backend == 'elegans':
         from . import _elegans
         _elegans.plot_number_observer(*args, **kwargs)
     else:
-        BACKEND.plot_number_observer(*args, **kwargs)
+        ret = BACKEND.plot_number_observer(*args, **kwargs)
+        if ret is not None:
+            return ret
 
 def plot_world(*args, backend=None, **kwargs):
     """
@@ -75,15 +77,17 @@ def plot_world(*args, backend=None, **kwargs):
 
     """
     if backend == 'matplotlib':
-        _matplotlib.plot_world(*args, **kwargs)
+        return _matplotlib.plot_world(*args, **kwargs)
     elif backend == 'plotly':
         from . import _plotly
-        _plotly.plot_world(*args, **kwargs)
+        return _plotly.plot_world(*args, **kwargs)
     elif backend == 'elegans':
         from . import _elegans
         _elegans.plot_world(*args, **kwargs)
     else:
-        BACKEND.plot_world(*args, **kwargs)
+        ret = BACKEND.plot_world(*args, **kwargs)
+        if ret is not None:
+            return ret
 
 def plot_movie(*args, backend=None, **kwargs):
     """
@@ -125,15 +129,17 @@ def plot_trajectory(*args, backend=None, **kwargs):
 
     """
     if backend == 'matplotlib':
-        _matplotlib.plot_trajectory(*args, **kwargs)
+        return _matplotlib.plot_trajectory(*args, **kwargs)
     elif backend == 'plotly':
         from . import _plotly
-        _plotly.plot_trajectory(*args, **kwargs)
+        return _plotly.plot_trajectory(*args, **kwargs)
     elif backend == 'elegans':
         from . import _elegans
         _elegans.plot_trajectory(*args, **kwargs)
     else:
-        BACKEND.plot_trajectory(*args, **kwargs)
+        ret = BACKEND.plot_trajectory(*args, **kwargs)
+        if ret is not None:
+            return ret
 
 plot_movie_of_trajectory = _matplotlib.plot_movie_of_trajectory_with_matplotlib  # default
 

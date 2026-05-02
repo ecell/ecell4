@@ -105,8 +105,7 @@ def plot_number_observer(
     if layout is not None:
         layout_.update(layout)
     fig.update(dict(layout=layout_))
-
-    plotly.offline.iplot(fig)
+    return fig
 
 plot_number_observer_with_plotly = plot_number_observer
 
@@ -142,8 +141,7 @@ def plot_stl(filename, layout=None, **kwargs):
         layout_.update(layout)
     layout_ = go.Layout(**layout_)
     fig = go.Figure(data=[mesh3D], layout=layout_)
-    plotly.offline.iplot(fig)
-
+    return fig
 
 def plot_world(world, species_list=None, max_count=1000, marker=None, layout=None, stl=None):
     """
@@ -215,7 +213,7 @@ def plot_world(world, species_list=None, max_count=1000, marker=None, layout=Non
         layout_.update(layout)
     layout_ = go.Layout(**layout_)
     fig = go.Figure(data=traces, layout=layout_)
-    plotly.offline.iplot(fig)
+    return fig
 
 plot_world_with_plotly = plot_world
 
@@ -268,6 +266,6 @@ def plot_trajectory(
         layout_.update(layout)
     layout_ = go.Layout(**layout_)
     fig = go.Figure(data=traces, layout=layout_)
-    plotly.offline.iplot(fig)
+    return fig
 
 plot_trajectory_with_plotly = plot_trajectory

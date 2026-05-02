@@ -164,9 +164,10 @@ def plot_number_observer(
         ax.set_ylim(ylim)
 
     if filename is not None:
-        plt.savefig(filename)
-    else:
-        plt.show()
+        raise RuntimeError("filename was deprecated. Use the return value.")
+        # plt.savefig(filename)
+    plt.close()
+    return fig
 
 plot_number_observer_with_matplotlib = plot_number_observer
 
@@ -274,7 +275,8 @@ def plot_world(
             legend_opts.update(legend)
         ax.legend(handles=plots, labels=species_list,  **legend_opts)
 
-    plt.show()
+    plt.close()
+    return fig
 
 plot_world_with_matplotlib = plot_world
 
@@ -331,7 +333,8 @@ def plot_trajectory(
         if isinstance(legend, dict):
             legend_opts.update(legend)
         ax.legend(**legend_opts)
-    plt.show()
+    plt.close()
+    return fig
 
 plot_trajectory_with_matplotlib = plot_trajectory
 
@@ -438,7 +441,8 @@ def plot_trajectory2d_with_matplotlib(
         if isinstance(legend, dict):
             legend_opts.update(legend)
         ax.legend(**legend_opts)
-    plt.show()
+    plt.close()
+    return fig
 
 def plot_movie_of_trajectory2d_with_matplotlib(
         obs, plane='xy', figsize=6, grid=True,
@@ -839,8 +843,8 @@ def plot_world2d_with_matplotlib(
             legend_opts.update(legend)
         ax.legend(**legend_opts)
         # ax.legend(handles=plots, labels=species_list,  **legend_opts)
-
-    plt.show()
+    plt.close()
+    return fig
 
 def __scatter_world2d_with_matplotlib(
         world, indices, ax, species_list, marker_size, max_count, scale, **kwargs):
