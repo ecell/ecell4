@@ -1,3 +1,3 @@
 from ecell4.util import *
 
-__version__ = '1.2.2'
+__version__ = '1.2.3'
