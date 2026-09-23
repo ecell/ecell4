@@ -447,7 +447,13 @@ def __prepare_mplot3d_with_attractive_mpl(
             axis._axinfo['grid']['linewidth'] = 1.0
 
         for tick in axis.get_major_ticks():
-            tick.label.set_fontsize(14)
+            # NOTE: Tick.label was removed in recent matplotlib;
+            # tick labels are now label1/label2.
+            for label in (getattr(tick, 'label1', None),
+                          getattr(tick, 'label2', None),
+                          getattr(tick, 'label', None)):
+                if label is not None:
+                    label.set_fontsize(14)
 
     ax.set_xlim(*wrange['x'])
     ax.set_ylim(*wrange['y'])
@@ -456,7 +462,9 @@ def __prepare_mplot3d_with_attractive_mpl(
     ax.set_ylabel('Y', fontsize=20, labelpad=12)
     ax.set_zlabel('Z', fontsize=20, labelpad=12)
 
-    for axis in (ax.w_xaxis, ax.w_yaxis, ax.w_zaxis):
+    for axis in (getattr(ax, 'xaxis', None) or getattr(ax, 'w_xaxis'),
+                 getattr(ax, 'yaxis', None) or getattr(ax, 'w_yaxis'),
+                 getattr(ax, 'zaxis', None) or getattr(ax, 'w_zaxis')):
         axis.line.set_color("white")
         axis.set_pane_color((0.9176470588235294, 0.9176470588235294, 0.9490196078431372, 0 if wireframe else 1))
 
@@ -471,7 +479,18 @@ def __prepare_mplot3d_with_attractive_mpl(
         ax.set_axis_off()
 
     if angle is not None:
-        ax.azim, ax.elev, ax.dist = angle
+        azim, elev, dist = angle
+        ax.view_init(elev=elev, azim=azim)
+        if hasattr(ax, '_dist'):
+            ax._dist = dist
+        else:
+            ax.dist = dist
+        ax.azim = azim
+        ax.elev = elev
+        try:
+            ax.dist = dist
+        except Exception:
+            pass
 
     plt.subplots_adjust(left=0.0, right=1.0 / whratio, top=1.02, bottom=0.02)
     return (fig, ax)

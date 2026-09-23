@@ -55,7 +55,12 @@ def plot_number_observer(
     if 'axes.prop_cycle' in plt.rcParams.keys():
         color_cycle = [prop['color'] for prop in plt.rcParams['axes.prop_cycle']]
     else:
-        color_cycle = plt.rcParams['axes.color_cycle']
+        # 'axes.color_cycle' was removed in matplotlib 2.0; kept as a
+        # fallback for very old versions only.
+        try:
+            color_cycle = plt.rcParams['axes.color_cycle']
+        except KeyError:
+            color_cycle = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
     if y_keys is not None and isinstance(y_keys, str):
         y_keys = (y_keys, )
@@ -68,7 +73,7 @@ def plot_number_observer(
             observers = [(args[i], args[i + 1]) for i in range(0, len(args), 2)]
         else:
             observers = [(args[i], args[i + 1]) for i in range(0, len(args) - 1, 2)]
-            observers.append(args[-1], None)
+            observers.append((args[-1], None))
     else:
         observers = [(obs, None) for obs in args]
 
@@ -121,7 +126,7 @@ def plot_number_observer(
             opts = plot_opts.copy()
 
             if len(label) > 0 and label[0] == '_':
-                label = '$\_$' + label[1:]  # XXX: lazy escaping for a special character
+                label = r'$\_$' + label[1:]  # XXX: lazy escaping for a special character
             if label not in color_map.keys():
                 color_map[label] = color_cycle[len(color_map) % len(color_cycle)]
                 opts["label"] = label
@@ -179,9 +184,12 @@ def __prepare_mplot3d_with_matplotlib(
     ax = fig.add_subplot(111, projection='3d')
 
     if wireframe:
-        ax.w_xaxis.set_pane_color((0, 0, 0, 0))
-        ax.w_yaxis.set_pane_color((0, 0, 0, 0))
-        ax.w_zaxis.set_pane_color((0, 0, 0, 0))
+        # NOTE: w_xaxis/w_yaxis/w_zaxis were removed in recent matplotlib.
+        # Use xaxis/yaxis/zaxis with fallback for old versions.
+        for axis in (getattr(ax, 'xaxis', None) or getattr(ax, 'w_xaxis'),
+                     getattr(ax, 'yaxis', None) or getattr(ax, 'w_yaxis'),
+                     getattr(ax, 'zaxis', None) or getattr(ax, 'w_zaxis')):
+            axis.set_pane_color((0, 0, 0, 0))
 
     ax.grid(grid)
     ax.set_xlim(*wrange['x'])
@@ -195,7 +203,22 @@ def __prepare_mplot3d_with_matplotlib(
         ax.set_axis_off()
 
     if angle is not None:
-        ax.azim, ax.elev, ax.dist = angle
+        azim, elev, dist = angle
+        # elev/azim via public API; dist maps to the (now private) _dist
+        # in recent matplotlib versions where the public 'dist' was removed.
+        ax.view_init(elev=elev, azim=azim)
+        if hasattr(ax, '_dist'):
+            ax._dist = dist
+        else:
+            ax.dist = dist
+        # Keep legacy attributes in sync for old matplotlib versions
+        # and for code that reads ax.azim/ax.elev directly.
+        ax.azim = azim
+        ax.elev = elev
+        try:
+            ax.dist = dist
+        except Exception:
+            pass
 
     return (fig, ax)
 
@@ -349,7 +372,7 @@ def __prepare_plot_with_matplotlib(
     import matplotlib.pyplot as plt
 
     fig = plt.figure(figsize=(figsize, figsize))
-    ax = fig.gca()
+    ax = fig.add_subplot(111)
     ax.set_aspect('equal')
 
     # if wireframe:
@@ -948,7 +971,7 @@ def plot_movie2d_with_matplotlib(
     wrange = {'x': wrange[xidx], 'y': wrange[yidx]}
 
     fig = plt.figure(figsize=(figsize, figsize))
-    ax = fig.gca()
+    ax = fig.add_subplot(111)
 
     color_scale = matplotlib_color_scale()
 
